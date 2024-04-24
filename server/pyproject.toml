@@ -9,6 +9,10 @@ readme = "README.md"
 python = "^3.11"
 fastapi = "^0.110.2"
 prisma = "^0.13.1"
+llama-index = "^0.10.31"
+langgraph = "^0.0.38"
+nest-asyncio = "^1.6.0"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
