@@ -20,7 +20,10 @@ model User {
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   name       String?
+  patientId  String          @unique
   triageData PatientRecord[]
+  Message    Message[]
+  Thread     Thread[]
 }
 
 model PatientRecord {
@@ -60,4 +63,26 @@ model PatientRecord {
   newLengthOfStayMin    String
   User                  User?    @relation(fields: [userId], references: [id])
   userId                String?
+}
+
+model Thread {
+  id        String    @id
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Messages  Message[]
+  User      User      @relation(fields: [userId], references: [id])
+  userId    String
+}
+
+model Message {
+  id        String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  content   String
+  metadata  String
+  role      String   @default("AI")
+  Thread    Thread?  @relation(fields: [threadId], references: [id])
+  threadId  String?
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 }
