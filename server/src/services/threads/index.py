@@ -18,3 +18,5 @@ class Thread:
             where={"User": {"is": {"patientId": self.patient_id}}},
             data={"Messages":{"set":[]}},
         )
+
+# no need since we use streamlit ?

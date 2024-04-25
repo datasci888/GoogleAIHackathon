@@ -16,53 +16,54 @@ datasource db {
 }
 
 model User {
-  id         String          @id
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  name       String?
-  patientId  String          @unique
-  triageData PatientRecord[]
-  Message    Message[]
-  Thread     Thread[]
+  id            String          @id
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  name          String?
+  queueCode     String          @unique
+  patientId     String?         @unique
+  MedicalRecord PatientRecord[]
+  Message       Message[]
+  Thread        Thread[]
 }
 
 model PatientRecord {
-  id                    String   @id
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  age                   Int
-  patientsNumberPerHour Int
-  arrivalMode           String
-  injury                Boolean
-  chiefComplain         String
-  mental                String
-  pain                  Boolean
-  nrsPain               Int
-  sbp                   Int
-  dbp                   Int
-  hr                    Int
-  rr                    Int
-  bt                    Float
-  saturation            Int
-  ktasRn                String
-  diagnosisInED         String
-  disposition           String
-  ktasExpert            String
-  errorGroup            Int
-  lengthOfStayMin       Int
-  ktasDurationMin       Int
-  mistriage             String
-  newAge                String
-  newSbp                String
-  newDbp                String
-  newHr                 String
-  newRr                 String
-  newBt                 String
-  newNrsPain            String
-  newKtasDurationMin    String
-  newLengthOfStayMin    String
-  User                  User?    @relation(fields: [userId], references: [id])
-  userId                String?
+  id                 String   @id
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  age                Int?
+  arrivalMode        String?
+  injury             Boolean?
+  mainSymptom        String?
+  additionalSymptoms String?
+  mental             String?
+  pain               Boolean?
+  nrsPain            Int?
+  sbp                Int?
+  dbp                Int?
+  hr                 Int?
+  rr                 Int?
+  bt                 Float?
+  saturation         Int?
+  ktasRn             String?
+  diagnosisInED      String?
+  disposition        String?
+  ktasExpert         String?
+  errorGroup         Int?
+  lengthOfStayMin    Int?
+  ktasDurationMin    Int?
+  mistriage          String?
+  newAge             String?
+  newSbp             String?
+  newDbp             String?
+  newHr              String?
+  newRr              String?
+  newBt              String?
+  newNrsPain         String?
+  newKtasDurationMin String?
+  newLengthOfStayMin String?
+  User               User?    @relation(fields: [userId], references: [id])
+  userId             String?
 }
 
 model Thread {
