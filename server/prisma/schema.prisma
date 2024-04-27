@@ -16,54 +16,36 @@ datasource db {
 }
 
 model User {
-  id            String          @id
+  id            String          @id @default(cuid())
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   name          String?
-  queueCode     String          @unique
   patientId     String?         @unique
+  triageScore   Int?
   MedicalRecord PatientRecord[]
   Message       Message[]
   Thread        Thread[]
 }
 
 model PatientRecord {
-  id                 String   @id
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  age                Int?
-  arrivalMode        String?
-  injury             Boolean?
-  mainSymptom        String?
-  additionalSymptoms String?
-  mental             String?
-  pain               Boolean?
-  nrsPain            Int?
-  sbp                Int?
-  dbp                Int?
-  hr                 Int?
-  rr                 Int?
-  bt                 Float?
-  saturation         Int?
-  ktasRn             String?
-  diagnosisInED      String?
-  disposition        String?
-  ktasExpert         String?
-  errorGroup         Int?
-  lengthOfStayMin    Int?
-  ktasDurationMin    Int?
-  mistriage          String?
-  newAge             String?
-  newSbp             String?
-  newDbp             String?
-  newHr              String?
-  newRr              String?
-  newBt              String?
-  newNrsPain         String?
-  newKtasDurationMin String?
-  newLengthOfStayMin String?
-  User               User?    @relation(fields: [userId], references: [id])
-  userId             String?
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  age              String?
+  arrivalMode      String?
+  injury           String?
+  cliefComplaint   String?
+  mentalState      String?
+  painIntensity    String?
+  bloodPressure    String?
+  heartRate        String?
+  respiratoryRate  String?
+  bodyTemperature  String?
+  oxygenSaturation String?
+  User             User?    @relation(fields: [userId], references: [id])
+  userId           String?
+
+  @@index([userId])
 }
 
 model Thread {
