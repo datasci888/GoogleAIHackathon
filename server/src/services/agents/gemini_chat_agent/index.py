@@ -47,24 +47,24 @@ async def arun(user_message: str, user_id: str):
     inputs = {"messages": [HumanMessage(content=user_message)], "user_id": user_id}
 
     # not streaming
-    async for output in runnable.astream(inputs,debug=True):
-        # stream() yields dictionaries with output keyed by node name
-        for key, value in output.items():
-            print(f"Output from node '{key}':")
-            print("---")
-            print(value)
-        print("\n---\n")
-    # count = 0
-    # async for output in runnable.astream_log(inputs, include_types=["llm"]):
-    #     count += 1
-    #     # astream_log() yields the requested logs (here LLMs) in JSONPatch format
-    #     for op in output.ops:
-    #         if op["path"] == "/streamed_output/-":
-    #             # this is the output from .stream()
-    #             ...
-    #         elif op["path"].startswith("/logs/") and op["path"].endswith(
-    #             "/streamed_output/-"
-    #         ):
-    #             # because we chose to only include LLMs, these are LLM tokens
-    #             print("count", count)
-    #             print(op["value"])
+    # async for output in runnable.astream(inputs,debug=True):
+    #     # stream() yields dictionaries with output keyed by node name
+    #     for key, value in output.items():
+    #         print(f"Output from node '{key}':")
+    #         print("---")
+    #         print(value)
+    #     print("\n---\n")
+    count = 0
+    async for output in runnable.astream_log(inputs, include_types=["llm"],debug=True):
+        count += 1
+        # astream_log() yields the requested logs (here LLMs) in JSONPatch format
+        for op in output.ops:
+            if op["path"] == "/streamed_output/-":
+                # this is the output from .stream()
+                ...
+            elif op["path"].startswith("/logs/") and op["path"].endswith(
+                "/streamed_output/-"
+            ):
+                # because we chose to only include LLMs, these are LLM tokens
+                print("count", count)
+                print(op["value"])
