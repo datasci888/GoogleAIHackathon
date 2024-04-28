@@ -15,75 +15,59 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String          @id
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  name          String?
-  queueCode     String          @unique
-  patientId     String?         @unique
-  MedicalRecord PatientRecord[]
-  Message       Message[]
-  Thread        Thread[]
+model ERVisit {
+  id              String           @id @default(cuid())
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  ChatMessages    ChatMessage[]
+  User            User?            @relation(fields: [userId], references: [id])
+  userId          String?
+  ERPatientRecord ERPatientRecord?
 }
 
-model PatientRecord {
-  id                 String   @id
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  age                Int?
-  arrivalMode        String?
-  injury             Boolean?
-  mainSymptom        String?
-  additionalSymptoms String?
-  mental             String?
-  pain               Boolean?
-  nrsPain            Int?
-  sbp                Int?
-  dbp                Int?
-  hr                 Int?
-  rr                 Int?
-  bt                 Float?
-  saturation         Int?
-  ktasRn             String?
-  diagnosisInED      String?
-  disposition        String?
-  ktasExpert         String?
-  errorGroup         Int?
-  lengthOfStayMin    Int?
-  ktasDurationMin    Int?
-  mistriage          String?
-  newAge             String?
-  newSbp             String?
-  newDbp             String?
-  newHr              String?
-  newRr              String?
-  newBt              String?
-  newNrsPain         String?
-  newKtasDurationMin String?
-  newLengthOfStayMin String?
-  User               User?    @relation(fields: [userId], references: [id])
-  userId             String?
+model ERPatientRecord {
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  age              String?
+  arrivalMode      String?
+  injury           String?
+  cliefComplaint   String?
+  mentalState      String?
+  painIntensity    String?
+  bloodPressure    String?
+  heartRate        String?
+  respiratoryRate  String?
+  bodyTemperature  String?
+  oxygenSaturation String?
+  ERVisit          ERVisit  @relation(fields: [erVisitId], references: [id])
+  erVisitId        String   @unique
+
+  @@index([erVisitId])
 }
 
-model Thread {
-  id        String    @id
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Messages  Message[]
-  User      User      @relation(fields: [userId], references: [id])
-  userId    String
-}
-
-model Message {
-  id        String   @id
+model ChatMessage {
+  id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   content   String
-  metadata  String
+  metadata  String?
   role      String   @default("AI")
-  Thread    Thread?  @relation(fields: [threadId], references: [id])
-  threadId  String?
+  ERVisit   ERVisit? @relation(fields: [erVisit], references: [id])
+  erVisit   String?
   User      User?    @relation(fields: [userId], references: [id])
   userId    String?
+
+  @@index([erVisit])
+}
+
+model User {
+  id          String        @id @default(cuid())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  name        String?
+  patientId   String?       @unique
+  triageScore Int?
+  ERVisit     ERVisit[]
+  ChatMessage ChatMessage[]
 }
