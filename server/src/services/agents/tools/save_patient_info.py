@@ -1,11 +1,10 @@
 from typing import Annotated
 from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
-from prisma.types import PatientRecordCreateInput, PatientRecordUpdateInput
 
 
 async def save_patient_info(
-    user_id: Annotated[str, Field(description="user id")],
+    er_visit_id: Annotated[str, Field(description="erVisitId")],
     sex: Annotated[str | None, Field(description="sex of the patient")] = None,
     age: Annotated[str | None, Field(description="age of the patient")] = None,
     arrival_mode: Annotated[
@@ -52,7 +51,7 @@ async def save_patient_info(
         "respiratoryRate": respiratory_rate,
         "bodyTemperature": body_temperature,
         "oxygenSaturation": oxygen_saturation,
-        "userId": user_id,
+        "erVisitId": er_visit_id,
     }
 
     parsed_input = {}
@@ -61,14 +60,12 @@ async def save_patient_info(
             parsed_input[key] = value
 
     try:
-        db_patient = await prisma.patientrecord.find_first(where={"userId": user_id})
 
-        if not db_patient:
-            db_patient = await prisma.patientrecord.create(data=parsed_input)
-        else:
-            db_patient = await prisma.patientrecord.update(
-                where={"id": db_patient.id}, data=parsed_input
-            )
+        db_patient = await prisma.erpatientrecord.update(
+            where={"erVisitId": er_visit_id},
+            data={**parsed_input},
+        )
+
         return db_patient.model_dump_json()
     except Exception as e:
         raise ToolException(str(e))

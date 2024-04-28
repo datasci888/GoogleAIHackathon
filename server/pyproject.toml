@@ -17,6 +17,7 @@ langchain-community = "^0.0.34"
 google-cloud-aiplatform = "^1.48.0"
 llama-index-llms-litellm = "^0.1.4"
 langchain-google-genai = "^1.0.2"
+redis = "^5.0.4"
 
 
 [build-system]

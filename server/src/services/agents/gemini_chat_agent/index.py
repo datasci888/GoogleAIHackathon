@@ -8,15 +8,15 @@ from src.services.agents.gemini_chat_agent.nodes.extraction_agent import (
 from src.services.agents.gemini_chat_agent.nodes.extract_missing_informations import (
     extract_missing_informations,
 )
-from src.services.agents.gemini_chat_agent.nodes.after_extraction_agent import (
-    after_extraction_agent,
+from src.services.agents.gemini_chat_agent.nodes.post_extraction_agent import (
+    post_extraction_agent,
 )
 
 graph = StateGraph(AgentState)
 
 graph.add_node("extract_missing_informations", extract_missing_informations)
 graph.add_node("extraction_agent", extraction_agent)
-graph.add_node("after_extraction_agent", after_extraction_agent)
+graph.add_node("post_extraction_agent", post_extraction_agent)
 
 graph.set_entry_point("extract_missing_informations")
 
@@ -25,7 +25,7 @@ def extract_missing_informations_router(state: AgentState):
     if state["missing_information_to_extract"]:
         return "extraction_agent"
     else:
-        return "after_extraction_agent"
+        return "post_extraction_agent"
 
 
 graph.add_conditional_edges(
@@ -33,18 +33,18 @@ graph.add_conditional_edges(
     extract_missing_informations_router,
     {
         "extraction_agent": "extraction_agent",
-        "after_extraction_agent": "after_extraction_agent",
+        "post_extraction_agent": "post_extraction_agent",
     },
 )
 graph.add_edge("extraction_agent", END)
-graph.add_edge("after_extraction_agent", END)
+graph.add_edge("post_extraction_agent", END)
 
 runnable = graph.compile()
 
 
-async def arun(user_message: str, user_id: str):
+async def arun(user_message: str, er_visit_id: str):
     # TODO: bypass user id from agent tool call for security
-    inputs = {"messages": [HumanMessage(content=user_message)], "user_id": user_id}
+    inputs = {"messages": [HumanMessage(content=user_message)], "er_visit_id": er_visit_id}
 
     # not streaming
     # async for output in runnable.astream(inputs,debug=True):
