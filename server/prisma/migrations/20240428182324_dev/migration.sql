@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ChatMessage" ALTER COLUMN "raw" SET DATA TYPE TEXT;

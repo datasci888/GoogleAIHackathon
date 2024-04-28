@@ -50,15 +50,13 @@ model ChatMessage {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  content   String
-  metadata  String?
-  role      String   @default("AI")
-  ERVisit   ERVisit? @relation(fields: [erVisit], references: [id])
-  erVisit   String?
+  raw       String
+  ERVisit   ERVisit? @relation(fields: [erVisitId], references: [id])
+  erVisitId String?
   User      User?    @relation(fields: [userId], references: [id])
   userId    String?
 
-  @@index([erVisit])
+  @@index([erVisitId])
 }
 
 model User {
