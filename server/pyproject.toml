@@ -19,6 +19,7 @@ llama-index-llms-litellm = "^0.1.4"
 langchain-google-genai = "^1.0.2"
 redis = "^5.0.4"
 jsonpickle = "^3.0.4"
+numpy = "^1.26.4"
 
 
 [build-system]
