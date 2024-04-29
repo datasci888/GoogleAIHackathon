@@ -22,16 +22,37 @@ async def extraction_agent(state: AgentState):
 
     missing_informations_to_extract = state["missing_information_to_extract"]
 
+    examples = [{
+  "sex": "male",
+  "arrival_mode": "private car",
+  "age": "40",
+  "blood_pressure": "80/120",
+  "oxygen_saturation": "99%",
+  "chief_complaint": "chest pain since morning with itiching in my body.",
+  "user_id": "test",
+  "mental_state": "normal",
+  "pain_intensity": "7",
+  "heart_rate": "115",
+  "respiratory_rate": "normal",
+  "injury": "I have minor injury in my neck",
+  "body_temperature": "38"
+}
+]
+    
     SYSTEM_PROMPT = [
         HumanMessage(
-            content=f"""You are a Triage Assistant.
-                        Your task is to retrieve information to ensure that the patient is well treated.
-                        
-                        Here are the information that you need to ask and save :
-                        {json.dumps(missing_informations_to_extract)}
+            content = f"""You are a Triage Assistant.
+                        Your only task is to retrieve information to ensure that the patient is well treated.
+                        Do not be chatty or do not ask any more questions if the required details in below are captured 
+                        from the given user prompt. 
+                        If the chief complaint is not mentioned explicity by the patient, check if his complaint is mentioned in the provided context.
+                        Here are the information that you need to ask
+                         {json.dumps(missing_informations_to_extract)}
                         today time is : {today_datetime}
                         er_visit_id is: {state["er_visit_id"]}
-                        
+                        Here are also example for what you suppose to capture from the user's inputs:
+                        {examples}
+
                         After saving the information, sympathetize with the patient and request for the remaining missing information from the user.
                         """
         ),
