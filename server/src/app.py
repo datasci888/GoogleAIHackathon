@@ -98,5 +98,8 @@ async def main():
                 st.write(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
 
+    
+    # TODO: connect user response to ai agent
+    from src.services.agents.gemini_chat_agent.index import arun
     await prisma.disconnect()
 asyncio.run(main())
