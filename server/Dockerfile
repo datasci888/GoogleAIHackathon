@@ -11,11 +11,10 @@ RUN poetry run prisma generate
 EXPOSE 8501
 CMD poetry run start
 
-
 FROM base AS prod
 COPY . .
 RUN poetry install
 RUN poetry run prisma generate
-RUN poetry run prisma migrate deploy -y
+RUN poetry run prisma migrate deploy
 EXPOSE 8501
 CMD poetry run start
