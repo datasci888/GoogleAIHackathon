@@ -94,12 +94,18 @@ async def main():
                 st.write(prompt)
 
             with response_holder.chat_message("assistant"):
-                response = "I can help you with that. Please wait a moment..."
+                from src.services.agents.gemini_chat_agent.index import arun
+                # TODO: connect user response to ai agent
+                # theres a bug with the agent not being able to connect to the db
+                res = await arun(user_message=prompt, er_visit_id="test")
+                print("res",res)
+                response = res
                 st.write(response)
             st.session_state.messages.append({"role": "assistant", "content": response})
 
     
-    # TODO: connect user response to ai agent
-    from src.services.agents.gemini_chat_agent.index import arun
+
+    
+    
     await prisma.disconnect()
 asyncio.run(main())
