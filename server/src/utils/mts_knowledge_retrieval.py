@@ -31,12 +31,12 @@ async def aquery(query: str):
     return response
 
 
-import asyncio
+# import asyncio
 
 # asyncio.run(
 #     aquery(
-#         """Let's think step by step. 
-#         Your goal is to classify user Triage color based on MTS. 
+#         """Let's think step by step.
+#         Your goal is to classify user Triage color based on MTS.
 #         Don't assume that user states all their symptoms.
 #         Be proactive and ask for for more questions if classification cannot be made, don't under or over classify !
 #         State your reasoning for the classification and suggest on what Triage action should be done.
@@ -46,8 +46,8 @@ import asyncio
 
 # asyncio.run(
 #     aquery(
-#         """Let's think step by step. 
-#         Your goal is to classify user Triage color based on MTS. 
+#         """Let's think step by step.
+#         Your goal is to classify user Triage color based on MTS.
 #         Don't assume that user states all their symptoms.
 #         Be proactive and ask for for more questions if classification cannot be made, don't under or over classify !
 #         State your reasoning for the classification and suggest on what Triage action should be done.
@@ -57,10 +57,10 @@ import asyncio
 
 # asyncio.run(
 #     aquery(
-#         """Let's think step by step. 
-#         Your goal is to classify user Triage color based on MTS. 
+#         """Let's think step by step.
+#         Your goal is to classify user Triage color based on MTS.
 #         Don't assume that user states all their symptoms.
-#         Be proactive and ask for for more questions if classification cannot be made, don't under or over classify ! 
+#         Be proactive and ask for for more questions if classification cannot be made, don't under or over classify !
 #         State your reasoning for the classification and suggest on what Triage action should be done.
 #         My leg cannot be moved"""
 #     )

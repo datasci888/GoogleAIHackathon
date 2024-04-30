@@ -32,7 +32,7 @@ model ERPatientRecord {
   age              String?
   arrivalMode      String?
   injury           String?
-  cliefComplaint   String?
+  chiefComplaint   String?
   mentalState      String?
   painIntensity    String?
   bloodPressure    String?
