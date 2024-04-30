@@ -24,7 +24,7 @@ graph.set_entry_point("extract_missing_informations")
 
 
 def extract_missing_informations_router(state: AgentState):
-    if state["missing_information_to_extract"]:
+    if state["missing_informations_to_extract"]:
         return "extraction_agent"
     else:
         return "post_extraction_agent"
@@ -48,35 +48,39 @@ runnable = graph.compile()
 async def arun(user_message: str, er_visit_id: str):
     from src.services.agents.gemini_chat_agent.states.index import AgentState
     from src.datasources.prisma import prisma
+
     # create erVisitId if there's none
     db_ervisit = await prisma.ervisit.upsert(
         where={"id": er_visit_id},
         data={"create": {"id": er_visit_id}, "update": {}},
-        include={"ChatMessages": {"take": 4,"order_by": {"createdAt": "desc"}}},
+        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
     )
 
     prev_messages = db_ervisit.ChatMessages or []
     prev_messages = prev_messages[::-1]
     parsed_prev_messages = []
     for message in prev_messages:
-        parsed_prev_messages.append(
-            jsonpickle.decode(message.raw)
-        )
-    
-    print("prev_messages",parsed_prev_messages)
-    
+        parsed_prev_messages.append(jsonpickle.decode(message.raw))
+
+    print("prev_messages", parsed_prev_messages)
+
     messages = parsed_prev_messages + [HumanMessage(content=user_message)]
     inputs = {"messages": messages, "er_visit_id": er_visit_id}
+    from langchain_core.messages import ChatMessage
 
     # not streaming
+    final_message: AgentState = AgentState()
     async for output in runnable.astream(inputs):
         # stream() yields dictionaries with output keyed by node name
         for key, value in output.items():
             print(f"Output from node '{key}':")
             print("---")
             print(value)
+            final_message = value
         print("\n---\n")
-    count = 0
+    print("final_message", final_message)
+    return final_message["messages"][-1].content
+    # count = 0
 
     # async for output in runnable.astream_log(inputs, include_types=["llm"],debug=True):
     #     count += 1
