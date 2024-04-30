@@ -20,7 +20,7 @@ async def extraction_agent(state: AgentState):
     )
     today_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
 
-    missing_informations_to_extract = state["missing_information_to_extract"]
+    missing_informations_to_extract = state["missing_informations_to_extract"]
 
     SYSTEM_PROMPT = [
         HumanMessage(
