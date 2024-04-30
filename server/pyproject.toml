@@ -6,7 +6,7 @@ authors = ["vikyw89 <vikyw89@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "<3.13,>=3.10"
 fastapi = "^0.110.2"
 prisma = "^0.13.1"
 llama-index = "^0.10.31"
@@ -19,6 +19,9 @@ llama-index-llms-litellm = "^0.1.4"
 langchain-google-genai = "^1.0.2"
 redis = "^5.0.4"
 jsonpickle = "^3.0.4"
+pinecone-client = "^3.2.2"
+llama-index-vector-stores-pinecone = "^0.1.6"
+llama-index-postprocessor-flag-embedding-reranker = "^0.1.2"
 
 
 [build-system]
@@ -28,3 +31,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 start = "scripts.start:run"
 testing = "scripts.testing:run"
+seed_vectordb = "scripts.seed_vectordb:run"
