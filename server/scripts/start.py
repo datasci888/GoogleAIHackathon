@@ -1,4 +1,4 @@
 def run():
     import subprocess
     
-    subprocess.run(args="uvicorn src.main:app --host 0.0.0.0 --port 8000 --loop asyncio", shell=True)
+    subprocess.run(args="python -m streamlit run ./src/app.py --server.port=8501 --server.address=0.0.0.0", shell=True)

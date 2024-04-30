@@ -1,0 +1,10 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: prod
+    volumes:
+      - .:/server
+    ports:
+      - 8501:8501

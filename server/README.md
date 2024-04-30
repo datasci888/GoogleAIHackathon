@@ -18,7 +18,7 @@ poetry run prisma generate
 poetry run start
 ```
 
-head to localhost:8000
+head to localhost:8501
 
 ## PROJECT STRUCTURE
 
@@ -26,3 +26,13 @@ head to localhost:8000
 ├── prisma: db schema and types
 ├── scripts: poetry run scripts
 └── src: source code
+
+## RUN WITH DOCKER
+
+requirements:
+
+- docker
+
+```
+docker compose up
+```

@@ -21,5 +21,5 @@ async def extract_missing_informations(state: AgentState):
         if value is None:
             missing_informations_to_extract.append(key)
 
-    state["missing_information_to_extract"] = missing_informations_to_extract
+    state["missing_informations_to_extract"] = missing_informations_to_extract
     return state
