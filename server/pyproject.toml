@@ -26,6 +26,8 @@ llama-index-postprocessor-flag-embedding-reranker = "^0.1.2"
 streamlit = "^1.33.0"
 langsmith = "^0.1.52"
 unsync = "^1.4.0"
+llama-index-graph-stores-neo4j = "^0.1.4"
+llama-index-llms-openai = "^0.1.16"
 
 
 [build-system]

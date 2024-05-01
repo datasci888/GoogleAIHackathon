@@ -26,9 +26,9 @@ model ERVisit {
 }
 
 model ERPatientRecord {
-  id               String   @id @default(cuid())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               String       @id @default(cuid())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
   age              String?
   arrivalMode      String?
   injury           String?
@@ -40,10 +40,19 @@ model ERPatientRecord {
   respiratoryRate  String?
   bodyTemperature  String?
   oxygenSaturation String?
-  ERVisit          ERVisit  @relation(fields: [erVisitId], references: [id])
-  erVisitId        String   @unique
+  ERVisit          ERVisit      @relation(fields: [erVisitId], references: [id])
+  erVisitId        String       @unique
+  triageColour     TriageColour?
 
   @@index([erVisitId])
+}
+
+enum TriageColour {
+  RED
+  ORANGE
+  YELLOW
+  GREEN
+  BLUE
 }
 
 model ChatMessage {

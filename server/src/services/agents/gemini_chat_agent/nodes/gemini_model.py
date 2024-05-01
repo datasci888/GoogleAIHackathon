@@ -15,7 +15,7 @@ async def gemini_model(state: AgentState):
         AIMessage(content="understood"),
     ] + state["input_messages"]
 
-    response = await  model.ainvoke(input=input)
+    response = await  model.astream(input=input)
     state["messages"] = response
     return state
 
