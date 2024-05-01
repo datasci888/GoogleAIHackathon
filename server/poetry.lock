@@ -3776,6 +3776,16 @@ files = [
 ]
 
 [[package]]
+name = "unsync"
+version = "1.4.0"
+description = "Unsynchronize asyncio"
+optional = false
+python-versions = "*"
+files = [
+    {file = "unsync-1.4.0.tar.gz", hash = "sha256:a29e0f8952ffb0b3a0453ce436819a5a1ba2febbb5caa707c319f6f98d35f3c5"},
+]
+
+[[package]]
 name = "uritemplate"
 version = "4.1.1"
 description = "Implementation of RFC 6570 URI Templates"
@@ -4044,4 +4054,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "<3.13,>=3.10"
-content-hash = "5aab782b8b5c5e836bb6dd49aca91f92d29bb6ad871d9dfdfe2b5d564f16f746"
+content-hash = "1bfd2e12f7f8decfb71f07a47fc46aae7c54b821e5d7dd454d181d22abbeb46a"

@@ -118,11 +118,13 @@ async def main():
 
                 # TODO: connect user response to ai agent
                 # theres a bug with the agent not being able to connect to the db
-                res = await arun(user_message=prompt, er_visit_id="test")
-                print("res", res)
-                response = res
-                st.markdown(response["final_messages"][0].content)
-            st.session_state.messages.append({"role": "assistant", "content": response["final_messages"][0].content})
+                final_response = ""
+                async_stream = arun(user_message=prompt, er_visit_id="test")
+                async for chunk in async_stream:
+                    st.markdown(chunk)
+                    final_response += chunk
+                
+            st.session_state.messages.append({"role": "assistant", "content": final_response})
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -25,6 +25,7 @@ llama-index-vector-stores-pinecone = "^0.1.6"
 llama-index-postprocessor-flag-embedding-reranker = "^0.1.2"
 streamlit = "^1.33.0"
 langsmith = "^0.1.52"
+unsync = "^1.4.0"
 
 
 [build-system]
