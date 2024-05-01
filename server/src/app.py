@@ -1,13 +1,33 @@
 from src.services.er_visit import read_er_visit
 import streamlit as st
+from audio_recorder_streamlit import audio_recorder
 import jsonpickle
 import asyncio
+import os
 from nest_asyncio import apply
+from openai import OpenAI
+client = OpenAI()
+
 apply()
 
+
+def transcribe(audio_file):
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file=audio_file, 
+        response_format="text"
+    )
+    return transcription
+
+def text_to_speech(text):
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="nova",
+        input=text
+    )
+    return response.content
+
 async def main():
-
-
     if "messages" not in st.session_state:
         # change the id later depending on session
         er_visit = await read_er_visit(id="test")
@@ -23,108 +43,58 @@ async def main():
         st.session_state.messages = parsed_er_messages
 
     st.title("AI Triage Care")
-    tabs = st.tabs(["Patient Data Entry", "Consult With Medic"])
 
-    with tabs[0]:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-        st.header("Patient Data Entry Form")
-        col1, col2 = st.columns(2)
+    query_holder = st.empty()
+    response_holder = st.empty()
+    cols = st.columns([0.9, 0.1])
+    tts = st.checkbox('Enable Text-to-Speech')
+    error = st.empty()
 
-        with col1:
-            sex = st.selectbox("Sex", ["Female", "Male"])
-            age = st.number_input("Age", min_value=18, max_value=90)
-            arrival_mode = st.number_input(
-                "Arrival Mode",
-                min_value=1,
-                max_value=8,
-                help="Type of transportation to the hospital",
-            )
-            injury = st.checkbox("Injury", help="Whether the patient is injured or not")
-
-        with col2:
-            chief_complain = st.selectbox(
-                "Chief Complaint",
-                ["pain", "headache", "nausea", "trauma"],
-                help="The patient's complaint",
-            )
-            mental = st.selectbox(
-                "Mental Status",
-                ["Alert", "Verbose Response", "Pain Response", "Unresponsive"],
-                help="The mental state of the patient",
-            )
-            pain = st.checkbox("Pain", help="Whether the patient has pain")
-            nrs_pain = st.slider(
-                "NRS Pain Score",
-                0,
-                10,
-                0,
-                help="Nurse's assessment of pain for the patient",
-            )
-
-        st.divider()
-        col3, col4 = st.columns(2)
-
-        with col3:
-            sbp = st.number_input(
-                "Systolic Blood Pressure (SBP)", min_value=80, max_value=200
-            )
-            dbp = st.number_input(
-                "Diastolic Blood Pressure (DBP)", min_value=50, max_value=120
-            )
-
-        with col4:
-            hr = st.number_input("Heart Rate (HR)", min_value=45, max_value=120)
-            rr = st.number_input("Respiratory Rate (RR)", min_value=10, max_value=30)
-            bt = st.number_input("Body Temperature (BT)", min_value=35, max_value=39)
-
-        if st.button("Submit"):
-            data = {
-                "Sex": sex,
-                "Age": age,
-                "Arrival Mode": arrival_mode,
-                "Injury": injury,
-                "Chief Complaint": chief_complain,
-                "Mental Status": mental,
-                "Pain": pain,
-                "NRS Pain Score": nrs_pain,
-                "SBP": sbp,
-                "DBP": dbp,
-                "HR": hr,
-                "RR": rr,
-                "BT": bt,
-            }
-
-            st.write("Submitted Data:")
-            st.json(data)
-
-    with tabs[1]:
-
-        st.header("Consult With Medic")
-
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        query_holder = st.empty()
-        response_holder = st.empty()
-
-        if prompt := st.chat_input("What's your concern?"):
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with query_holder.chat_message("user"):
-                st.write(prompt)
-
-            with response_holder.chat_message("assistant"):
-                from src.services.agents.gemini_chat_agent.index import arun
-
-                # TODO: connect user response to ai agent
-                # theres a bug with the agent not being able to connect to the db
-                final_response = ""
-                async_stream = arun(user_message=prompt, er_visit_id="test")
-                async for chunk in async_stream:
-                    st.markdown(chunk)
-                    final_response += chunk
+    with cols[0]:
+        prompt = st.chat_input("What's your concern?")
+    
+    with cols[1]:
+        audio_bytes = audio_recorder(text='', icon_size="2x")
+        if audio_bytes:
+            file_name = "speech.mp3"
+            try:
+                with open(file_name, 'wb+') as audio_file:
+                    audio_file.write(audio_bytes)
+                    audio_file.seek(0)
+                    transcript = transcribe(audio_file)
                 
-            st.session_state.messages.append({"role": "assistant", "content": final_response})
+                os.remove(file_name)
+                prompt = transcript
+            except:
+                error.warning("The recorded file is too short. Please record your question again!")
+
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with query_holder.chat_message("user"):
+            st.write(prompt)
+
+        with response_holder.chat_message("assistant"):
+            final_response = "I am sorry, I am unable to connect to the AI agent at the moment. Please try again later."
+            st.write(final_response)
+            if tts:
+                audio = text_to_speech(final_response)
+                st.audio(audio)
+            # from src.services.agents.gemini_chat_agent.index import arun
+
+            # # TODO: connect user response to ai agent
+            # # theres a bug with the agent not being able to connect to the db
+            # final_response = ""
+            # async_stream = arun(user_message=prompt, er_visit_id="test")
+            # async for chunk in async_stream:
+            #     st.markdown(chunk)
+            #     final_response += chunk
+            
+        st.session_state.messages.append({"role": "assistant", "content": final_response})
+
 
 if __name__ == "__main__":
     asyncio.run(main())
