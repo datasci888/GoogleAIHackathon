@@ -102,23 +102,26 @@ async def arun(user_message: str, er_visit_id: str) -> AsyncIterable[str]:
     # TODO: refactor !
     # TODO: make it streamable
 
-    stream = runnable.astream_log(input=input)
-    final_text = ""
-    async for output in stream:
-        # print("output", output.ops)
-        # print("\n")
-        for op in output.ops:
-            # print("op", op)
-            if op["path"].startswith("/logs/ChatGoogleGenerativeAI/streamed_output_str/-"):
-                final_text += op["value"]
-                yield op["value"]
-                # print("stream",op["value"])
-            elif op["path"].startswith("/logs/") and op["path"].endswith(
-                "/streamed_output/-"
-            ):
-                # because we chose to only include LLMs, these are LLM tokens
-                # print("streamed_output", op["value"])
-                pass
+    # stream = runnable.astream_log(input=input)
+    # final_text = ""
+    # async for output in stream:
+    #     # print("output", output.ops)
+    #     print("\n")
+    #     for op in output.ops:
+    #         print("op", op)
+    #         if op["path"].startswith("/logs/ChatGoogleGenerativeAI/streamed_output_str/-"):
+    #             final_text += op["value"]
+    #             yield op["value"]
+    #             print("stream",op["value"])
+    #         elif op["path"].startswith("/logs/") and op["path"].endswith(
+    #             "/streamed_output/-"
+    #         ):
+    #             # because we chose to only include LLMs, these are LLM tokens
+    #             # print("streamed_output", op["value"])
+    #             pass
+    stream:AgentState = await runnable.ainvoke(input=input, debug=True)
+    final_text = stream["final_messages"][0].content
+    yield final_text
     # # save to db
     res1 = await prisma.chatmessage.create(
         data={
@@ -126,12 +129,12 @@ async def arun(user_message: str, er_visit_id: str) -> AsyncIterable[str]:
             "raw": jsonpickle.encode(input["input_messages"][0]),
         }
     )
-    print("res1", res1)
+    # print("res1", res1)
     res2 = await prisma.chatmessage.create(
         data={
             "erVisitId": er_visit_id,
             "raw": jsonpickle.encode(AIMessage(content=final_text)),
         }
     )
-    
+    print("Res2",res2)
     await prisma.disconnect()
