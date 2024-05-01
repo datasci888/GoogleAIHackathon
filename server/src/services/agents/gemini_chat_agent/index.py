@@ -25,7 +25,6 @@ graph.set_entry_point("extract_missing_informations")
 
 def extract_missing_informations_router(state: AgentState):
     if state["missing_informations_to_extract"]:
-    if state["missing_informations_to_extract"]:
         return "extraction_agent"
     else:
         return "post_extraction_agent"
@@ -55,8 +54,7 @@ async def arun(user_message: str, er_visit_id: str) -> AgentState:
     db_ervisit = await prisma.ervisit.upsert(
         where={"id": er_visit_id},
         data={"create": {"id": er_visit_id}, "update": {}},
-        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
-        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
+        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}}
     )
 
     prev_messages = db_ervisit.ChatMessages or []
