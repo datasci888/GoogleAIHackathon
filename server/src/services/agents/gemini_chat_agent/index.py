@@ -25,6 +25,7 @@ graph.set_entry_point("extract_missing_informations")
 
 def extract_missing_informations_router(state: AgentState):
     if state["missing_informations_to_extract"]:
+    if state["missing_informations_to_extract"]:
         return "extraction_agent"
     else:
         return "post_extraction_agent"
@@ -49,10 +50,12 @@ async def arun(user_message: str, er_visit_id: str) -> AgentState:
     from src.services.agents.gemini_chat_agent.states.index import AgentState
     from src.datasources.prisma import prisma
 
+
     # create erVisitId if there's none
     db_ervisit = await prisma.ervisit.upsert(
         where={"id": er_visit_id},
         data={"create": {"id": er_visit_id}, "update": {}},
+        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
         include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
     )
 
@@ -76,6 +79,7 @@ async def arun(user_message: str, er_visit_id: str) -> AgentState:
             print(f"Output from node '{key}':")
             print("---")
             print(value)
+            final_message = value
             final_message = value
         print("\n---\n")
     print("final_message", final_message)
