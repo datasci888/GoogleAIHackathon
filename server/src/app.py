@@ -6,6 +6,7 @@ import asyncio
 import os
 from nest_asyncio import apply
 from openai import OpenAI
+
 client = OpenAI()
 
 apply()
@@ -13,19 +14,15 @@ apply()
 
 def transcribe(audio_file):
     transcription = client.audio.transcriptions.create(
-        model="whisper-1", 
-        file=audio_file, 
-        response_format="text"
+        model="whisper-1", file=audio_file, response_format="text"
     )
     return transcription
 
+
 def text_to_speech(text):
-    response = client.audio.speech.create(
-        model="tts-1",
-        voice="nova",
-        input=text
-    )
+    response = client.audio.speech.create(model="tts-1", voice="nova", input=text)
     return response.content
+
 
 async def main():
     if "messages" not in st.session_state:
@@ -51,26 +48,28 @@ async def main():
     query_holder = st.empty()
     response_holder = st.empty()
     cols = st.columns([0.9, 0.1])
-    tts = st.checkbox('Enable Text-to-Speech')
+    tts = st.checkbox("Enable Text-to-Speech")
     error = st.empty()
 
     with cols[0]:
         prompt = st.chat_input("What's your concern?")
-    
+
     with cols[1]:
-        audio_bytes = audio_recorder(text='', icon_size="2x")
+        audio_bytes = audio_recorder(text="", icon_size="2x")
         if audio_bytes:
             file_name = "speech.mp3"
             try:
-                with open(file_name, 'wb+') as audio_file:
+                with open(file_name, "wb+") as audio_file:
                     audio_file.write(audio_bytes)
                     audio_file.seek(0)
                     transcript = transcribe(audio_file)
-                
+
                 os.remove(file_name)
                 prompt = transcript
             except:
-                error.warning("The recorded file is too short. Please record your question again!")
+                error.warning(
+                    "The recorded file is too short. Please record your question again!"
+                )
 
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
@@ -78,7 +77,12 @@ async def main():
             st.write(prompt)
 
         with response_holder.chat_message("assistant"):
-            final_response = "I am sorry, I am unable to connect to the AI agent at the moment. Please try again later."
+            from src.services.agents.mts_agent.index import astream
+
+            final_response = ""
+            async for chunk in astream("test", prompt):
+                final_response += chunk
+
             st.write(final_response)
             if tts:
                 audio = text_to_speech(final_response)
@@ -92,8 +96,10 @@ async def main():
             # async for chunk in async_stream:
             #     st.markdown(chunk)
             #     final_response += chunk
-            
-        st.session_state.messages.append({"role": "assistant", "content": final_response})
+
+        st.session_state.messages.append(
+            {"role": "assistant", "content": final_response}
+        )
 
 
 if __name__ == "__main__":
