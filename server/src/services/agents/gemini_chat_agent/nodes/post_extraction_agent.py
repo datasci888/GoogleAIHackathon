@@ -62,10 +62,10 @@ async def post_extraction_agent(state: AgentState):
         AIMessage(content="Understood"),
     ]
     response = await gemini_agent.ainvoke(
-        input={"messages": SYSTEM_PROMPT + state["messages"] + [state["input_message"]]}
+        input={"messages": SYSTEM_PROMPT + state["messages"] + state["input_messages"]}
     )
 
     state["messages"] = [response]
-    print("response", response)
-    state["final_message"] = response["messages"][-1]
+
+    state["final_messages"] = [response["messages"][-1]]
     return state

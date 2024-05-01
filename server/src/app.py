@@ -2,30 +2,24 @@ from src.services.er_visit import read_er_visit
 import streamlit as st
 import jsonpickle
 import asyncio
-from src.datasources.prisma import prisma
-import asyncio
 from nest_asyncio import apply
 apply()
 
 async def main():
-    # check if db is connected
-    is_db_connected = prisma.is_connected()
-    if not is_db_connected:
-        await prisma.connect()
 
-    # change the id later depending on session
-    er_visit = await read_er_visit(id="test")
-    er_messages = er_visit.ChatMessages
 
-    parsed_er_messages = []
-    for message in er_messages:
-        parsed_message = jsonpickle.decode(message.raw)
-        print("role", parsed_message.type)
-        print("content", parsed_message.content)
-        parsed_er_messages.append(
-            {"role": parsed_message.type, "content": parsed_message.content}
-        )
     if "messages" not in st.session_state:
+        # change the id later depending on session
+        er_visit = await read_er_visit(id="test")
+        er_messages = er_visit.ChatMessages
+
+        parsed_er_messages = []
+        for message in er_messages:
+            parsed_message = jsonpickle.decode(message.raw)
+            parsed_er_messages.append(
+                {"role": parsed_message.type, "content": parsed_message.content}
+            )
+        parsed_er_messages.reverse()
         st.session_state.messages = parsed_er_messages
 
     st.title("AI Triage Care")
@@ -127,10 +121,8 @@ async def main():
                 res = await arun(user_message=prompt, er_visit_id="test")
                 print("res", res)
                 response = res
-                st.markdown(response["final_message"].content)
-            st.session_state.messages.append({"role": "assistant", "content": response["final_message"].content})
+                st.markdown(response["final_messages"][0].content)
+            st.session_state.messages.append({"role": "assistant", "content": response["final_messages"][0].content})
 
-    await prisma.disconnect()
-
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
