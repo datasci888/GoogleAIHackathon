@@ -12,7 +12,7 @@ from src.services.agents.gemini_chat_agent.nodes.extract_missing_informations im
 from src.services.agents.gemini_chat_agent.nodes.post_extraction_agent import (
     post_extraction_agent,
 )
-import jsonpickle
+
 
 graph = StateGraph(AgentState)
 
@@ -48,40 +48,57 @@ runnable = graph.compile()
 async def arun(user_message: str, er_visit_id: str) -> AgentState:
     from src.services.agents.gemini_chat_agent.states.index import AgentState
     from src.datasources.prisma import prisma
-
-
+    await prisma.connect()
     # create erVisitId if there's none
     db_ervisit = await prisma.ervisit.upsert(
         where={"id": er_visit_id},
         data={"create": {"id": er_visit_id}, "update": {}},
-        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}}
+        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
     )
-
+    import jsonpickle
     prev_messages = db_ervisit.ChatMessages or []
-    prev_messages = prev_messages[::-1]
+    prev_messages.reverse()
     parsed_prev_messages = []
     for message in prev_messages:
+        print("raw", message.raw)
         parsed_prev_messages.append(jsonpickle.decode(message.raw))
 
     inputs = {
         "messages": parsed_prev_messages,
-        "input_message": HumanMessage(content=user_message),
+        "input_messages": [HumanMessage(content=user_message)],
         "er_visit_id": er_visit_id,
     }
 
     # not streaming
-    final_message: AgentState = AgentState()
-    async for output in runnable.astream(inputs,debug=True):
+    final_state: AgentState = AgentState()
+    async for output in runnable.astream(inputs, debug=True):
         # stream() yields dictionaries with output keyed by node name
         for key, value in output.items():
-            print(f"Output from node '{key}':")
-            print("---")
-            print(value)
-            final_message = value
-            final_message = value
-        print("\n---\n")
-    print("final_message", final_message)
-    return final_message
+            # print(f"Output from node '{key}':")
+            # print("---")
+            # print(value)
+            final_state = value
+        # print("\n---\n")
+
+    import jsonpickle
+
+    # # save to db
+    res1 = await prisma.chatmessage.create(
+        data={
+            "erVisitId": er_visit_id,
+            "raw": jsonpickle.encode(final_state["input_messages"][0]),
+        }
+    )
+    print("res1", res1)
+    res2 = await prisma.chatmessage.create(
+        data={
+            "erVisitId": er_visit_id,
+            "raw": jsonpickle.encode(final_state["final_messages"][0]),
+        }
+    )
+    print("res2", res2)
+    await prisma.disconnect()
+    return final_state
     # TODO: refactor !
     # TODO: make it streamable
     # return final_message["messages"][-1].content
