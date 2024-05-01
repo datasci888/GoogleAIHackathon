@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
 
@@ -35,6 +35,10 @@ async def save_patient_info(
     oxygen_saturation: Annotated[
         str | None, Field(description="Patient's oxygen saturation")
     ] = None,
+    triage_colour: Annotated[
+        Literal["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"],
+        Field(description="Triage colour"),
+    ] = None,
 ):
     from src.datasources.prisma import prisma
 
@@ -52,6 +56,7 @@ async def save_patient_info(
         "bodyTemperature": body_temperature,
         "oxygenSaturation": oxygen_saturation,
         "erVisitId": er_visit_id,
+        "triageColour": triage_colour,
     }
 
     parsed_input = {}

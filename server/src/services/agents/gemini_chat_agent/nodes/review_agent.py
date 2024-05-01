@@ -18,7 +18,7 @@ async def review_agent(state: AgentState):
     
     review : Review = await runnable.ainvoke(input=f"""
                                              Let's think step by step.
-                                             Given a original message and response message, submit a review.
+                                             Given a original message and response message, submit a review of the response.
                                              Every review score should be between 0 to 5.
                                              
                                              [Original Message]: 

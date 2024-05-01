@@ -1,6 +1,5 @@
 # Will chat with user
-import json
-from typing import AsyncIterable, Iterable
+from typing import AsyncIterable
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import END, StateGraph
 from src.services.agents.gemini_chat_agent.states.index import AgentState
@@ -136,5 +135,5 @@ async def arun(user_message: str, er_visit_id: str) -> AsyncIterable[str]:
             "raw": jsonpickle.encode(AIMessage(content=final_text)),
         }
     )
-    print("Res2",res2)
+
     await prisma.disconnect()
