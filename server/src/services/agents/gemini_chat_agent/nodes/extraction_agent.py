@@ -71,19 +71,18 @@ async def extraction_agent(state: AgentState):
 
     messages = SYSTEM_PROMPT + state["messages"]
 
-    response = await gemini_agent.ainvoke(input={"messages": messages})
-    state["messages"] = state["messages"] + [response["messages"][-1]]
-
+    response = await gemini_agent.ainvoke(input={"messages": messages + [state["input_message"]] if messages[-1].type != "human" else []})
+    state["messages"] += [response["messages"][-1]]
+    state["final_message"] = response["messages"][-1]
+    
     # # save to db
     for message in state["messages"]:
         message: BaseMessage
-        print("message", message)
         # we skip if it's function message or function call
         if isinstance(message, FunctionMessage):
             continue
         if isinstance(message, AIMessage) and message.content == "":
             continue
-        print("message2", message)
         await prisma.chatmessage.create(
             data={"raw": jsonpickle.encode(message), "erVisitId": state["er_visit_id"]},
         )

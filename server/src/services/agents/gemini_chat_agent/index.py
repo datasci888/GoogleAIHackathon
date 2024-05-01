@@ -25,6 +25,7 @@ graph.set_entry_point("extract_missing_informations")
 
 def extract_missing_informations_router(state: AgentState):
     if state["missing_informations_to_extract"]:
+    if state["missing_informations_to_extract"]:
         return "extraction_agent"
     else:
         return "post_extraction_agent"
@@ -45,14 +46,16 @@ graph.add_edge("post_extraction_agent", END)
 runnable = graph.compile()
 
 
-async def arun(user_message: str, er_visit_id: str):
+async def arun(user_message: str, er_visit_id: str) -> AgentState:
     from src.services.agents.gemini_chat_agent.states.index import AgentState
     from src.datasources.prisma import prisma
+
 
     # create erVisitId if there's none
     db_ervisit = await prisma.ervisit.upsert(
         where={"id": er_visit_id},
         data={"create": {"id": er_visit_id}, "update": {}},
+        include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
         include={"ChatMessages": {"take": 4, "order_by": {"createdAt": "desc"}}},
     )
 
@@ -62,24 +65,28 @@ async def arun(user_message: str, er_visit_id: str):
     for message in prev_messages:
         parsed_prev_messages.append(jsonpickle.decode(message.raw))
 
-    print("prev_messages", parsed_prev_messages)
-
-    messages = parsed_prev_messages + [HumanMessage(content=user_message)]
-    inputs = {"messages": messages, "er_visit_id": er_visit_id}
-    from langchain_core.messages import ChatMessage
+    inputs = {
+        "messages": parsed_prev_messages,
+        "input_message": HumanMessage(content=user_message),
+        "er_visit_id": er_visit_id,
+    }
 
     # not streaming
     final_message: AgentState = AgentState()
-    async for output in runnable.astream(inputs):
+    async for output in runnable.astream(inputs,debug=True):
         # stream() yields dictionaries with output keyed by node name
         for key, value in output.items():
             print(f"Output from node '{key}':")
             print("---")
             print(value)
             final_message = value
+            final_message = value
         print("\n---\n")
     print("final_message", final_message)
-    return final_message["messages"][-1].content
+    return final_message
+    # TODO: refactor !
+    # TODO: make it streamable
+    # return final_message["messages"][-1].content
     # count = 0
 
     # async for output in runnable.astream_log(inputs, include_types=["llm"],debug=True):

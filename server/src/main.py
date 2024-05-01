@@ -1,5 +1,4 @@
 import time
-from typing import Union
 from nest_asyncio import apply
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
