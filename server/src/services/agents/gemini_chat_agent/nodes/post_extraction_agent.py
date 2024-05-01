@@ -1,12 +1,12 @@
 from langgraph.prebuilt.chat_agent_executor import create_function_calling_executor
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.llms.vertexai import VertexAI
 from src.configs.index import GOOGLE_API_KEY
 from langchain_core.messages import HumanMessage, AIMessage
 from src.services.agents.gemini_chat_agent.states.index import AgentState
 from src.services.agents.tools.save_patient_info import save_patient_info_tool
 from datetime import datetime
-
-
+from src.datasources.prisma import prisma
 
 async def post_extraction_agent(state: AgentState):
     model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
@@ -21,6 +21,9 @@ async def post_extraction_agent(state: AgentState):
     # TODO retrieve triage classification, and queue number from db, and assist user for information
     triage_classification = "urgent"
 
+    patient_record = await prisma.erpatientrecord.find_first(
+        where={"erVisitId": state["er_visit_id"]}
+    )
     
     # TODO query user queue number
     queue_number = "1"
@@ -33,7 +36,7 @@ async def post_extraction_agent(state: AgentState):
         HumanMessage(
             content=f"""You are an expert triage and emergency nurse who is responsile for classifying 
                         the triage level of the patient based on the collected inputs and below context:
-                        {state["messages"]}
+                        {patient_record.model_dump_json() if patient_record else "No patient record found"}
 
                         Based on the provided details for this patient, you have to follow Manchester Triage System (MTS)  
                         to classify the urgency level. 
@@ -49,7 +52,7 @@ async def post_extraction_agent(state: AgentState):
                         this queue number is calculated in real time
                         {queue_number}
                         today time is : {today_datetime}
-                        user_id is: {state["user_id"] if "user_id" in state else "Unknown"}
+                        er_visit_id is: {state["er_visit_id"] if "er_visit_id" in state else "Unknown"}
 
                         Your final answer should be the triage classification (one of the five MTS levels) with supporting reasons from the provided context.
 
@@ -59,8 +62,10 @@ async def post_extraction_agent(state: AgentState):
         AIMessage(content="Understood"),
     ]
     response = await gemini_agent.ainvoke(
-        input={"messages": SYSTEM_PROMPT + state["messages"]}
+        input={"messages": SYSTEM_PROMPT + state["messages"] + [state["input_message"]]}
     )
 
     state["messages"] = [response]
+    print("response", response)
+    state["final_message"] = response["messages"][-1]
     return state
