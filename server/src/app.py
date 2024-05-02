@@ -7,6 +7,7 @@ import asyncio
 import os
 from nest_asyncio import apply
 from openai import OpenAI
+from src.datasources.prisma import prisma
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -27,13 +28,13 @@ def text_to_speech(text):
 
 async def main():
     import uuid
+
     if not "er_visit_id" in st.session_state:
         st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
-        
+
     er_visit_id = st.session_state["er_visit_id"]
     if "messages" not in st.session_state:
         # change the id later depending on session
-
         er_visit = await read_er_visit(id=er_visit_id)
         er_messages = er_visit.ChatMessages or []
 
@@ -96,20 +97,10 @@ async def main():
             if tts:
                 audio = text_to_speech(final_response)
                 st.audio(audio)
-            # from src.services.agents.gemini_chat_agent.index import arun
-
-            # # TODO: connect user response to ai agent
-            # # theres a bug with the agent not being able to connect to the db
-            # final_response = ""
-            # async_stream = arun(user_message=prompt, er_visit_id="test")
-            # async for chunk in async_stream:
-            #     st.markdown(chunk)
-            #     final_response += chunk
 
         st.session_state.messages.append(
             {"role": "assistant", "content": final_response}
         )
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())

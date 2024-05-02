@@ -1,6 +1,9 @@
 from typing import Annotated, Literal
 from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
+from src.utils.knowledge_graph import KnowledgeGraph
+from src.datasources.prisma import prisma
+import asyncio
 
 
 async def arun(
@@ -57,33 +60,32 @@ async def arun(
             "Urinary problems",
             "Worried parent",
             "Wounds",
-            None,
         ],
-        Field(description="Patient presenting symptom"),
-    ] = None,
+        Field(description="Choose one of patient presenting symptom"),
+    ],
 ):
-    from src.datasources.prisma import prisma
+    """Save patient presenting symptom"""
 
-    if not presenting_symptom:
-        return None
     try:
-        db_patientrecord = await prisma.erpatientrecord.upsert(
-            where={"erVisitId": er_visit_id},
-            data={
-                "create": {
-                    "chiefComplaint": presenting_symptom,
-                    "erVisitId": er_visit_id,
-                },
-                "update": {"chiefComplaint": presenting_symptom},
-            },
-        )
-        from src.utils.knowledge_graph import KnowledgeGraph
-
         kg = KnowledgeGraph(label=er_visit_id, verbose=True)
-        await kg.astore_knowledge(
-            knowledge=f"patient presenting symptom is {presenting_symptom}"
+
+        await asyncio.gather(
+            prisma.erpatientrecord.upsert(
+                where={"erVisitId": er_visit_id},
+                data={
+                    "create": {
+                        "chiefComplaint": presenting_symptom,
+                        "erVisitId": er_visit_id,
+                    },
+                    "update": {"chiefComplaint": presenting_symptom},
+                },
+            ),
+            kg.astore_knowledge(
+                knowledge=f"patient presenting symptom is {presenting_symptom}"
+            ),
         )
-        return db_patientrecord.model_dump_json()
+
+        return f"{presenting_symptom} has been recorded"
     except Exception as e:
         raise ToolException(str(e))
 

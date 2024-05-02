@@ -9,7 +9,7 @@ from langgraph.prebuilt.chat_agent_executor import create_function_calling_execu
 from src.services.agents.tools import save_patient_info_kg, save_patient_triage_colour
 from langchain_core.messages import HumanMessage, AIMessage
 from src.utils.knowledge_graph import KnowledgeGraph
-
+import asyncio
 
 async def astream(state: AgentState):
     """
@@ -35,35 +35,29 @@ async def astream(state: AgentState):
 
     print("db_erpatientrecord", db_erpatientrecord)
     # TODO: do asyncio gather
-    discriminators_context = await discriminators_knowledge_retrieval.aquery(
-        query=db_erpatientrecord.chiefComplaint,
-    )
-    print("discriminators_context", discriminators_context)
 
     kg = KnowledgeGraph(label=state["er_visit_id"], verbose=True)
 
-    patient_info = await kg.aquery_knowledge(query="""patient""")
+    discriminators_context, patient_info = await asyncio.gather(
+        discriminators_knowledge_retrieval.aquery(
+            query=db_erpatientrecord.chiefComplaint,
+        ),
+        kg.aretrieve_knowledge(query="""patient"""),
+    )
+
     print("patient_info", patient_info)
 
-    try:
-        model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY)
-
-        runnable = create_function_calling_executor(
-            model=model, tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool]
-        )
-
-        async_stream = runnable.astream(
-            input={
-                "messages": (
-                    [
-                        HumanMessage(
-                            content=f"""Let's think step by step.
-                                You are a ER Triage agent.
+    input = {
+        "messages": (
+            [
+                HumanMessage(
+                    content=f"""Let's think step by step.
+                                You are a ER Triage agent, talking to the patient.
                                 Classify the patient's triage Colour based on MTS and record it using tool.
                                 If more information is needed, ask the patient's for additional symptoms or description of their issue.
                                 
                                 Here's what we know about the patient:
-                                {patient_info.response}
+                                {patient_info}
                                 
                                 And here's what we know about MTS discriminators:
                                 {discriminators_context}
@@ -73,51 +67,38 @@ async def astream(state: AgentState):
                                 Here's the conversation history:
                                 {json.dumps(state['messages'], default=str)}
                                 """
-                        ),
-                        AIMessage(content="understood"),
-                        HumanMessage(content=state["input_text"]),
-                    ]
-                )
-            }
+                ),
+                AIMessage(content="understood"),
+                HumanMessage(content=state["input_text"]),
+            ]
         )
+    }
+
+    try:
+        model = ChatGoogleGenerativeAI(
+            model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY
+        )
+
+        runnable = create_function_calling_executor(
+            model=model,
+            tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
+        )
+
+        async_stream = runnable.astream(input=input)
 
         state["output_stream"] = async_stream
         return state
     except Exception as e:
-        model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+        model = ChatGoogleGenerativeAI(
+            model="gemini-pro", google_api_key=GOOGLE_API_KEY
+        )
 
         runnable = create_function_calling_executor(
-            model=model, tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool]
+            model=model,
+            tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(
-            input={
-                "messages": (
-                    [
-                        HumanMessage(
-                            content=f"""Let's think step by step.
-                                You are a ER Triage agent.
-                                Classify the patient's triage Colour based on MTS and record it using tool.
-                                If more information is needed, ask the patient's for additional symptoms or description of their issue.
-                                
-                                Here's what we know about the patient:
-                                {patient_info.response}
-                                
-                                And here's what we know about MTS discriminators:
-                                {discriminators_context}
-                                
-                                er_visit_id: {state['er_visit_id']}
-                                
-                                Here's the conversation history:
-                                {json.dumps(state['messages'], default=str)}
-                                """
-                        ),
-                        AIMessage(content="understood"),
-                        HumanMessage(content=state["input_text"]),
-                    ]
-                )
-            }
-        )
+        async_stream = runnable.astream(input=input)
 
         state["output_stream"] = async_stream
         return state

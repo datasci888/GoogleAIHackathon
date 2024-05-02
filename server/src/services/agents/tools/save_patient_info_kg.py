@@ -2,6 +2,7 @@ from langchain_community.docstore.document import Document
 from typing import Annotated
 from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
+from src.utils.knowledge_graph import KnowledgeGraph
 
 
 async def arun(
@@ -11,24 +12,23 @@ async def arun(
         Field(
             description="Triplets of patient informations to be saved",
             examples=[
-                "Patient has a fever",
-                "Patient has a cough",
-                "Patient has a shortness of breath",
+                "Patient has a blurry eyes.",
+                "Patient has a deep cough.",
+                "Patient is 40 years old.",
             ],
         ),
-    ]
+    ],
 ):
     documents = []
     for triplet in triplets:
         documents.append(Document(page_content=triplet))
 
     try:
-        from src.utils.knowledge_graph import KnowledgeGraph
 
         kg = KnowledgeGraph(label=er_visit_id, verbose=True)
         knowledge = "\n".join(triplets)
         res = await kg.astore_knowledge(knowledge=knowledge)
-        return f"{knowledge} has been saved" 
+        return f"{knowledge} has been recorded"
     except Exception as e:
         raise ToolException(str(e))
 
