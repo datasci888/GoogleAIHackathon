@@ -1,8 +1,8 @@
-# AI Triage Care
+# EVA
 
 ![logo](./docs/logo.jpg)
 
-AI Triage Care is an AI-driven application designed to assist in the triage process at healthcare facilities by utilizing Google Gemini and the Manchester Triage System. This application leverages cutting-edge AI technology to help medical professionals classify patients quickly and accurately based on urgency.
+EVA - Emergency Medical Assistant is an AI-driven application designed to assist in the triage process at healthcare facilities by utilizing Google Gemini and the Manchester Triage System. This application leverages cutting-edge AI technology to help medical professionals classify patients quickly and accurately based on urgency.
 
 ## Introduction video
 
@@ -42,7 +42,7 @@ docker compose up
 
 ## Usage
 
-Once the Docker containers are running, AI Triage Care is accessible through a web browser. Navigate to http://localhost:8501 to start using the application.
+Once the Docker containers are running, EVA is accessible through a web browser. Navigate to http://localhost:8501 to start using the application.
 
 ## Operating the Application
 
