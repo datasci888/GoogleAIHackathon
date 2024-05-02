@@ -28,7 +28,7 @@ def text_to_speech(text):
 async def main():
     import uuid
     if not "er_visit_id" in st.session_state:
-        st.session_state.er_visit_id = uuid.uuid4().hex
+        st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
         
     er_visit_id = st.session_state["er_visit_id"]
     if "messages" not in st.session_state:

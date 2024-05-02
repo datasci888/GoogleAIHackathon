@@ -73,7 +73,9 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
                     text_chunk = schunk["agent"]["messages"][0].content
                 elif "action" in schunk:
                     # function call
-                    text_chunk = schunk["action"]["messages"][0].content
+                    text_chunk = f""""```code
+                    {schunk["action"]["messages"][0].content}
+                    ```"""
                 yield text_chunk
                 final_text += text_chunk
 
