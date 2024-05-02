@@ -20,7 +20,9 @@ async def astream(state: AgentState):
     - **Output**: Identified MTS presentation category (e.g., "Chest Pain").
     """
 
-    model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY)
+    model = ChatGoogleGenerativeAI(
+        model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY
+    )
 
     runnable = create_function_calling_executor(
         model=model,
@@ -41,8 +43,10 @@ async def astream(state: AgentState):
                 er_visit_id: {state['er_visit_id']}
                 
                 Here's the conversation history:
-                {json.dumps(state['messages'] +[HumanMessage(content=state["input_text"])], default=str)}"""
+                {json.dumps(state['messages'], default=str)}"""
                 ),
+                AIMessage(content="understood"),
+                HumanMessage(content=state["input_text"]),
             ]
         }
     )

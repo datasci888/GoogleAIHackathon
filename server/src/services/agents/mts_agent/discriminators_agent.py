@@ -67,12 +67,14 @@ async def astream(state: AgentState):
                              And here's what we know about MTS discriminators:
                              {discriminators_context}
                              
-                            Here's the conversation history:
-                             {json.dumps(state['messages'] +[HumanMessage(content=state["input_text"])], default=str)}
-
                              er_visit_id: {state['er_visit_id']}
+                             
+                             Here's the conversation history:
+                             {json.dumps(state['messages'], default=str)}
                              """
                     ),
+                    AIMessage(content="understood"),
+                    HumanMessage(content=state["input_text"]),
                 ]
             )
         }
