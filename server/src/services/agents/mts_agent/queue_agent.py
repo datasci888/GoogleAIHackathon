@@ -27,7 +27,8 @@ async def astream(state: AgentState):
             HumanMessage(
                 content=f"""Let's think step by step.
                         Today time is : {today_datetime}
-                        You are a ER Triage Agent.
+                        You are EVA an Emergency Virtual Assistant in charge of ER Triage.
+                        You are talking to an ER patient.
                         Monitor and gather more information about patient's medical data.
                         
                         The Manchester Triage System (MTS) is a method used in some emergency departments in the United Kingdom and other healthcare settings worldwide to prioritize patients based on the urgency of their medical needs. It helps ensure that patients who need the most urgent care are seen first. The system classifies patients into five different levels of urgency, each represented by a specific color:
@@ -38,6 +39,7 @@ async def astream(state: AgentState):
                         5. Blue (Non-Urgent): Non-urgent cases where the patient can typically wait to be seen, usually within 240 minutes. Examples include chronic issues without acute worsening, or minor symptoms like a cough or sore throat.
 
                         Here's information about the patient:
+                        
                         er_visit_id: {state['er_visit_id']}
                         
                         {patient_info}

@@ -82,7 +82,8 @@ with cols[1]:
                 prompt = transcript
         except:
             error.warning(
-                "The recorded file is too short. Please record your question again!"
+                "The recorded file is too short. Please record your question again!",
+                icon="🚨",
             )
 
 if prompt:
@@ -93,11 +94,14 @@ if prompt:
     with response_holder.chat_message("assistant"):
         from src.services.agents.mts_agent.index import astream
 
-        async def run_astream(er_visit_id: str, prompt: str | None = None, image: bytes | None = None):
+        async def run_astream(
+            er_visit_id: str, prompt: str | None = None, image: bytes | None = None
+        ):
             async for message in astream(er_visit_id, prompt):
                 st.markdown(body=message)
             return message
 
+        final_response = ""
         if uploaded_image:
             with st.spinner("Analyzing image"):
                 img_file = uploaded_image.read()
@@ -105,8 +109,13 @@ if prompt:
                 # process image here!
 
         with st.spinner("Thinking..."):
-            final_response = asyncio.run(run_astream(er_visit_id, prompt))
-
+            try:
+                final_response = asyncio.run(run_astream(er_visit_id, prompt))
+            except:
+                st.error(
+                    body="We are experiencing some issues. Please try again later.",
+                    icon="🚨",
+                )
         if tts:
             with st.spinner("Generating audio response"):
                 audio = text_to_speech(final_response)
