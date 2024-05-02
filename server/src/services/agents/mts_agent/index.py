@@ -36,10 +36,12 @@ graph.add_edge("queue_agent", END)
 runnable = graph.compile()
 
 
-async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
+async def astream(
+    er_visit_id: str, input_text: str | None, input_image: bytes | None = None
+) -> AsyncIterable[str]:
     if prisma.is_connected() is False:
         await prisma.connect()
-        
+
     # retrieve previous messages
     db_chat_messages = await prisma.chatmessage.find_many(
         where={"erVisitId": er_visit_id},
@@ -78,7 +80,7 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
                     if action_chunk:
                         # function call
                         message["action"] += action_chunk
-                
+
                 # cleanup
                 if len(message["action"]) > 0 and len(message["agent"]) > 0:
                     final_text = f"""
@@ -86,20 +88,20 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
                     {message["action"]}
                     ````
                     {message["agent"]}
-                    """ 
+                    """
                 elif len(message["action"]) > 0:
-                    final_text =  f"""
+                    final_text = f"""
                     ```
                     {message["action"]}
                     ````
                     """
                 elif len(message["agent"]) > 0:
-                    final_text =  f"""
+                    final_text = f"""
                     {message["agent"]}
                     """
 
                 yield final_text
-                
+
     # store in db
     db_user_chatmessage = await prisma.chatmessage.create(
         data={

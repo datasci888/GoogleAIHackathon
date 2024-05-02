@@ -2,7 +2,7 @@
 
 ![logo](./docs/logo.jpg)
 
-EVA - Emergency Medical Assistant is an AI-driven application designed to assist in the triage process at healthcare facilities by utilizing Google Gemini and the Manchester Triage System. This application leverages cutting-edge AI technology to help medical professionals classify patients quickly and accurately based on urgency.
+EVA - Emergency Virtual Assistant is an AI-driven application designed to assist in the triage process at healthcare facilities by utilizing Google Gemini and the Manchester Triage System. This application leverages cutting-edge AI technology to help medical professionals classify patients quickly and accurately based on urgency.
 
 ## Introduction video
 

@@ -6,11 +6,11 @@ import jsonpickle
 import asyncio
 import os
 from nest_asyncio import apply
+from PIL import Image
 from openai import OpenAI
 import uuid
 
 client = OpenAI(api_key=OPENAI_API_KEY)
-
 apply()
 
 
@@ -45,16 +45,23 @@ if "messages" not in st.session_state:
         )
     st.session_state.messages = parsed_er_messages
 
-st.title("EVA - Emergency Medical Assistant")
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-query_holder = st.empty()
-response_holder = st.empty()
-cols = st.columns([0.9, 0.1])
+st.title("EVA - Emergency Virtual Assistant")
 tts = st.checkbox("Enable Text-to-Speech")
+uploaded_image = st.file_uploader(
+    "Optionally, upload an image for analysis", type=["png", "jpg", "jpeg"]
+)
+chatbox = st.container(height=400)
+
+with chatbox:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    query_holder = st.empty()
+    response_holder = st.empty()
+
+cols = st.columns([0.9, 0.1])
 error = st.empty()
 
 with cols[0]:
@@ -62,7 +69,7 @@ with cols[0]:
 
 with cols[1]:
     audio_bytes = audio_recorder(text="", icon_size="2x")
-    if audio_bytes:
+    if audio_bytes and not prompt:
         file_name = "speech.mp3"
         try:
             with open(file_name, "wb+") as audio_file:
@@ -71,7 +78,8 @@ with cols[1]:
                 transcript = transcribe(audio_file)
 
             os.remove(file_name)
-            prompt = transcript
+            if transcript:
+                prompt = transcript
         except:
             error.warning(
                 "The recorded file is too short. Please record your question again!"
@@ -85,18 +93,23 @@ if prompt:
     with response_holder.chat_message("assistant"):
         from src.services.agents.mts_agent.index import astream
 
-        async def run_astream():
+        async def run_astream(er_visit_id: str, prompt: str | None = None, image: bytes | None = None):
             async for message in astream(er_visit_id, prompt):
-                st.markdown(
-                    body=message
-                )
+                st.markdown(body=message)
             return message
 
-        final_response = asyncio.run(run_astream())
+        if uploaded_image:
+            with st.spinner("Analyzing image"):
+                img_file = uploaded_image.read()
+                final_response = asyncio.run(run_astream(er_visit_id, prompt, img_file))
+                # process image here!
 
-        # st.write(final_response)
+        with st.spinner("Thinking..."):
+            final_response = asyncio.run(run_astream(er_visit_id, prompt))
+
         if tts:
-            audio = text_to_speech(final_response)
-            st.audio(audio)
+            with st.spinner("Generating audio response"):
+                audio = text_to_speech(final_response)
+                st.audio(audio)
 
     st.session_state.messages.append({"role": "assistant", "content": final_response})
