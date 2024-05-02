@@ -21,7 +21,7 @@ async def astream(state: AgentState):
     """
 
     model = ChatGoogleGenerativeAI(
-        model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY
+        model="gemini-pro", google_api_key=GOOGLE_API_KEY
     )
 
     runnable = create_function_calling_executor(
