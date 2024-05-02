@@ -7,7 +7,7 @@ import asyncio
 import os
 from nest_asyncio import apply
 from openai import OpenAI
-from src.datasources.prisma import prisma
+import uuid
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -26,89 +26,77 @@ def text_to_speech(text):
     return response.content
 
 
-async def main():
-    import uuid
+if not "er_visit_id" in st.session_state:
+    st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
 
-    if not "er_visit_id" in st.session_state:
-        st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
+er_visit_id = st.session_state["er_visit_id"]
+if "messages" not in st.session_state:
+    # change the id later depending on session
+    er_visit = asyncio.run(read_er_visit(id=er_visit_id))
+    er_messages = er_visit.ChatMessages or []
 
-    er_visit_id = st.session_state["er_visit_id"]
-    if "messages" not in st.session_state:
-        # change the id later depending on session
-        er_visit = await read_er_visit(id=er_visit_id)
-        er_messages = er_visit.ChatMessages or []
+    parsed_er_messages = []
+    index = len(er_messages) - 1
 
-        parsed_er_messages = []
-        index = len(er_messages) - 1
+    while index >= 0:
+        parsed_message = jsonpickle.decode(er_messages[index].raw)
+        parsed_er_messages.append(
+            {"role": parsed_message.type, "content": parsed_message.content}
+        )
+    st.session_state.messages = parsed_er_messages
 
-        while index >= 0:
-            parsed_message = jsonpickle.decode(er_messages[index].raw)
-            parsed_er_messages.append(
-                {"role": parsed_message.type, "content": parsed_message.content}
+st.title("AI Triage Care")
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+query_holder = st.empty()
+response_holder = st.empty()
+cols = st.columns([0.9, 0.1])
+tts = st.checkbox("Enable Text-to-Speech")
+error = st.empty()
+
+with cols[0]:
+    prompt = st.chat_input("What's your concern?")
+
+with cols[1]:
+    audio_bytes = audio_recorder(text="", icon_size="2x")
+    if audio_bytes:
+        file_name = "speech.mp3"
+        try:
+            with open(file_name, "wb+") as audio_file:
+                audio_file.write(audio_bytes)
+                audio_file.seek(0)
+                transcript = transcribe(audio_file)
+
+            os.remove(file_name)
+            prompt = transcript
+        except:
+            error.warning(
+                "The recorded file is too short. Please record your question again!"
             )
-        st.session_state.messages = parsed_er_messages
 
-    st.title("AI Triage Care")
+if prompt:
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with query_holder.chat_message("user"):
+        st.write(prompt)
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+    with response_holder.chat_message("assistant"):
+        from src.services.agents.mts_agent.index import astream
 
-    query_holder = st.empty()
-    response_holder = st.empty()
-    cols = st.columns([0.9, 0.1])
-    tts = st.checkbox("Enable Text-to-Speech")
-    error = st.empty()
-
-    with cols[0]:
-        prompt = st.chat_input("What's your concern?")
-
-    with cols[1]:
-        audio_bytes = audio_recorder(text="", icon_size="2x")
-        if audio_bytes:
-            file_name = "speech.mp3"
-            try:
-                with open(file_name, "wb+") as audio_file:
-                    audio_file.write(audio_bytes)
-                    audio_file.seek(0)
-                    transcript = transcribe(audio_file)
-
-                os.remove(file_name)
-                prompt = transcript
-            except:
-                error.warning(
-                    "The recorded file is too short. Please record your question again!"
-                )
-
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with query_holder.chat_message("user"):
-            st.write(prompt)
-
-        with response_holder.chat_message("assistant"):
-            from src.services.agents.mts_agent.index import astream
-
+        async def run_astream():
             final_response = ""
             async for chunk in astream(er_visit_id, prompt):
                 final_response += chunk
                 st.write(chunk + "  ")
+            return final_response
 
-            # st.write(final_response)
-            if tts:
-                audio = text_to_speech(final_response)
-                st.audio(audio)
+        final_response = asyncio.run(run_astream())
 
-        st.session_state.messages.append(
-            {"role": "assistant", "content": final_response}
-        )
+        # st.write(final_response)
+        if tts:
+            audio = text_to_speech(final_response)
+            st.audio(audio)
 
-async def init():
-    from src.datasources.prisma import prisma
-    if not prisma.is_connected():
-        await prisma.connect()
-        
-    await main()
-    await prisma.disconnect()
-    
-if __name__ == "__main__":
-    asyncio.run(init())
+    st.session_state.messages.append({"role": "assistant", "content": final_response})

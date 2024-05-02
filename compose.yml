@@ -4,7 +4,7 @@ services:
       context: ./server
       dockerfile: Dockerfile
       target: prod
-    volumes:
-      - .:/server
+    # volumes:
+    #   - .:/server
     ports:
       - 8501:8501

@@ -37,7 +37,9 @@ runnable = graph.compile()
 
 
 async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
-
+    if prisma.is_connected() is False:
+        await prisma.connect()
+        
     # retrieve previous messages
     db_chat_messages = await prisma.chatmessage.find_many(
         where={"erVisitId": er_visit_id},
@@ -67,7 +69,6 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
         if state.get("output_stream", []):
             # print("output_stream", state["output_stream"])
             async for schunk in state["output_stream"]:
-                print("schunk", schunk)
                 text_chunk = ""
                 if "agent" in schunk:
                     text_chunk = schunk["agent"]["messages"][0].content
@@ -76,6 +77,7 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
                     if action:
                         # function call
                         text_chunk = f""""```{action}```"""
+                print("text_chunk", text_chunk)
                 yield text_chunk
                 final_text += text_chunk
 
@@ -92,3 +94,5 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
             "raw": jsonpickle.encode(AIMessage(content=final_text)),
         }
     )
+
+    await prisma.disconnect()
