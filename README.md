@@ -4,6 +4,14 @@
 
 AI Triage Care is an AI-driven application designed to assist in the triage process at healthcare facilities by utilizing Google Gemini and the Manchester Triage System. This application leverages cutting-edge AI technology to help medical professionals classify patients quickly and accurately based on urgency.
 
+## Introduction video
+
+[Introduction video](https://www.youtube.com/watch?v=kICv8-PmgeI)
+
+## Demo video
+
+[Demo video](https://www.youtube.com/watch?v=5c1Xed7ql_k)
+
 ## Features
 
 - **AI-Powered Triage**: Leverages Google Gemini for robust natural language processing.
