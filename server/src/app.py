@@ -1,3 +1,4 @@
+from src.configs.index import OPENAI_API_KEY
 from src.services.er_visit import read_er_visit
 import streamlit as st
 from audio_recorder_streamlit import audio_recorder
@@ -7,7 +8,7 @@ import os
 from nest_asyncio import apply
 from openai import OpenAI
 
-client = OpenAI()
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 apply()
 
@@ -25,18 +26,25 @@ def text_to_speech(text):
 
 
 async def main():
+    import uuid
+    if not "er_visit_id" in st.session_state:
+        st.session_state.er_visit_id = uuid.uuid4().hex
+        
+    er_visit_id = st.session_state["er_visit_id"]
     if "messages" not in st.session_state:
         # change the id later depending on session
-        er_visit = await read_er_visit(id="test")
-        er_messages = er_visit.ChatMessages
+
+        er_visit = await read_er_visit(id=er_visit_id)
+        er_messages = er_visit.ChatMessages or []
 
         parsed_er_messages = []
-        for message in er_messages:
-            parsed_message = jsonpickle.decode(message.raw)
+        index = len(er_messages) - 1
+
+        while index >= 0:
+            parsed_message = jsonpickle.decode(er_messages[index].raw)
             parsed_er_messages.append(
                 {"role": parsed_message.type, "content": parsed_message.content}
             )
-        parsed_er_messages.reverse()
         st.session_state.messages = parsed_er_messages
 
     st.title("AI Triage Care")
@@ -80,10 +88,11 @@ async def main():
             from src.services.agents.mts_agent.index import astream
 
             final_response = ""
-            async for chunk in astream("test", prompt):
+            async for chunk in astream(er_visit_id, prompt):
                 final_response += chunk
+                st.markdown(chunk + "  ")
 
-            st.write(final_response)
+            # st.write(final_response)
             if tts:
                 audio = text_to_speech(final_response)
                 st.audio(audio)

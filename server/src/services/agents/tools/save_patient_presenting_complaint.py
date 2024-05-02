@@ -57,12 +57,15 @@ async def arun(
             "Urinary problems",
             "Worried parent",
             "Wounds",
+            None,
         ],
-        Field(description="Most likely presentation category"),
-    ],
+        Field(description="Patient presenting symptom"),
+    ] = None,
 ):
     from src.datasources.prisma import prisma
 
+    if not presenting_symptom:
+        return None
     try:
         db_patientrecord = await prisma.erpatientrecord.upsert(
             where={"erVisitId": er_visit_id},

@@ -20,7 +20,7 @@ model ERVisit {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   ChatMessages    ChatMessage[]
-  User            User?            @relation(fields: [userId], references: [id])
+  User            User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String?
   ERPatientRecord ERPatientRecord?
 }
@@ -40,7 +40,7 @@ model ERPatientRecord {
   respiratoryRate  String?
   bodyTemperature  String?
   oxygenSaturation String?
-  ERVisit          ERVisit      @relation(fields: [erVisitId], references: [id])
+  ERVisit          ERVisit      @relation(fields: [erVisitId], references: [id], onDelete: Cascade)
   erVisitId        String       @unique
   triageColour     TriageColour?
 
@@ -60,9 +60,9 @@ model ChatMessage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   raw       String
-  ERVisit   ERVisit? @relation(fields: [erVisitId], references: [id])
+  ERVisit   ERVisit? @relation(fields: [erVisitId], references: [id], onDelete: Cascade)
   erVisitId String?
-  User      User?    @relation(fields: [userId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String?
 
   @@index([erVisitId])

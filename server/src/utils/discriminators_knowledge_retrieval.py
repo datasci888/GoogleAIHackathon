@@ -37,10 +37,10 @@ async def aquery(query: str):
         {query}
         """
     )
-    print("response", response)
+    # print("response", response)
     return response.response
 
 
-import asyncio
+# import asyncio
 
-asyncio.run(aquery(query="Limb problems"))
+# asyncio.run(aquery(query="Limb problems"))

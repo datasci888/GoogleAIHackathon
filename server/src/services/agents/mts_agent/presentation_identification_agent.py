@@ -20,7 +20,7 @@ async def astream(state: AgentState):
     - **Output**: Identified MTS presentation category (e.g., "Chest Pain").
     """
 
-    model = ChatGoogleGenerativeAI(model="gemini-pro", google_api_key=GOOGLE_API_KEY)
+    model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY)
 
     runnable = create_function_calling_executor(
         model=model,
@@ -33,11 +33,14 @@ async def astream(state: AgentState):
                 HumanMessage(
                     content=f"""Let's think step by step.
                 You are a Triage assistant in charge of ER Triage.
-                Your task is to identify the most likely presenting symptom experienced by the patient and record it using tool.
-                Ask the patient's chief complaint or description of their issue.
+                Ask the patient to about what symptom they are experiencing. 
+                Classify the the symptoms of the patient using MTS (Manchester Triage System) and record it using tool.
+                Here are possible MTS presenting symptoms:
+                If no mention of presenting symptom, ask the patient for the symptom they are experiencing and how are they feeling.
+                
                 er_visit_id: {state['er_visit_id']}
                 
-                Here's previous conversation history:
+                Here's the conversation history:
                 {json.dumps(state['messages'] +[HumanMessage(content=state["input_text"])], default=str)}"""
                 ),
             ]

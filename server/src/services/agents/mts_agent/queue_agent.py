@@ -51,7 +51,7 @@ async def astream(state: AgentState):
                     
                     {patient_symptoms_and_classification.model_dump_json(exclude_none=True)}
                     
-                    Here's previous conversation history:
+                    Here's the conversation history:
                     {json.dumps(state['messages'] + [HumanMessage(content=state["input_text"])], default=str)}
                     """
                 )
