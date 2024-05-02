@@ -28,7 +28,6 @@ def text_to_speech(text):
 
 async def main():
     import uuid
-
     if not "er_visit_id" in st.session_state:
         st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
 
@@ -91,7 +90,7 @@ async def main():
             final_response = ""
             async for chunk in astream(er_visit_id, prompt):
                 final_response += chunk
-                st.markdown(chunk + "  ")
+                st.write(chunk + "  ")
 
             # st.write(final_response)
             if tts:

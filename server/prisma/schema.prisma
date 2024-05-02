@@ -11,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -26,9 +26,9 @@ model ERVisit {
 }
 
 model ERPatientRecord {
-  id               String       @id @default(cuid())
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id               String   @id @default(cuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
   age              String?
   arrivalMode      String?
   injury           String?
@@ -40,20 +40,20 @@ model ERPatientRecord {
   respiratoryRate  String?
   bodyTemperature  String?
   oxygenSaturation String?
-  ERVisit          ERVisit      @relation(fields: [erVisitId], references: [id], onDelete: Cascade)
-  erVisitId        String       @unique
-  triageColour     TriageColour?
+  ERVisit          ERVisit  @relation(fields: [erVisitId], references: [id], onDelete: Cascade)
+  erVisitId        String   @unique
+  triageColour     String?
 
   @@index([erVisitId])
 }
 
-enum TriageColour {
-  RED
-  ORANGE
-  YELLOW
-  GREEN
-  BLUE
-}
+// enum TriageColour {
+//   RED
+//   ORANGE
+//   YELLOW
+//   GREEN
+//   BLUE
+// }
 
 model ChatMessage {
   id        String   @id @default(cuid())
