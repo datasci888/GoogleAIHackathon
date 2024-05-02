@@ -28,6 +28,7 @@ def text_to_speech(text):
 
 async def main():
     import uuid
+
     if not "er_visit_id" in st.session_state:
         st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
 
@@ -101,5 +102,13 @@ async def main():
             {"role": "assistant", "content": final_response}
         )
 
-
-asyncio.run(main())
+async def init():
+    from src.datasources.prisma import prisma
+    if not prisma.is_connected():
+        await prisma.connect()
+        
+    await main()
+    await prisma.disconnect()
+    
+if __name__ == "__main__":
+    asyncio.run(init())
