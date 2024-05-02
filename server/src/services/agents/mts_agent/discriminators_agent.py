@@ -1,3 +1,4 @@
+from datetime import datetime
 from http.client import HTTPException, INTERNAL_SERVER_ERROR
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -12,7 +13,7 @@ from src.utils.knowledge_graph import KnowledgeGraph
 import asyncio
 
 
-async def astream(state: AgentState):
+def stream(state: AgentState):
     """
     ### Discriminator Seeking Agent
     - **Input**: Identified MTS presentation category and potentially additional patient information.
@@ -23,8 +24,8 @@ async def astream(state: AgentState):
     - **Output**: List of triggered discriminators (e.g., "Severe Pain", "Cardiac Pain").
     """
     # retrieve patient record
-
-    db_erpatientrecord = await prisma.erpatientrecord.find_first(
+    today_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+    db_erpatientrecord = prisma.erpatientrecord.find_first(
         where={"erVisitId": state["er_visit_id"]}
     )
 
@@ -34,26 +35,22 @@ async def astream(state: AgentState):
             detail="ERPatientRecord not found, impossible path",
         )
 
-    print("db_erpatientrecord", db_erpatientrecord)
-    # TODO: do asyncio gather
-
     kg = KnowledgeGraph(label=state["er_visit_id"], verbose=True)
 
-    discriminators_context, patient_info = await asyncio.gather(
-        discriminators_knowledge_retrieval.aquery(
-            query=db_erpatientrecord.chiefComplaint,
-        ),
-        kg.aquery_knowledge(query="""patient"""),
+    discriminators_context = discriminators_knowledge_retrieval.query(
+        query=db_erpatientrecord.chiefComplaint,
     )
 
-    print("patient_info", patient_info)
+    patient_info = kg.aquery_knowledge(query="""patient""")
 
     input = {
         "messages": (
             [
                 HumanMessage(
                     content=f"""Let's think step by step.
-                                You are a ER Triage agent, talking to the patient.
+                                Today time is : {today_datetime}
+                                You are EVA an Emergency Virtual Assistant in charge of ER Triage.
+                                You are talking to an ER patient.
                                 Classify the patient's triage Colour based on MTS and record it using tool.
                                 If more information is needed, ask the patient's for additional symptoms or description of their issue.
                                 
@@ -85,9 +82,9 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state
     except Exception as e:
         from langchain_community.llms.openai import OpenAI
@@ -102,7 +99,7 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state

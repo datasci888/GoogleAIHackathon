@@ -1,20 +1,15 @@
-async def read_er_visit(id: str):
+def read_er_visit(id: str):
     from src.datasources.prisma import prisma
 
-    if prisma.is_connected() is False:
-        await prisma.connect()
-
-    db_er_visit = await prisma.ervisit.find_unique(
+    db_er_visit = prisma.ervisit.find_unique(
         where={"id": id},
         include={"ChatMessages": {"order_by": {"createdAt": "desc"}, "take": 10}},
     )
 
     if not db_er_visit:
-        db_er_visit = await prisma.ervisit.create(
+        db_er_visit = prisma.ervisit.create(
             data={"id": id},
             include={"ChatMessages": {"order_by": {"createdAt": "desc"}, "take": 10}},
         )
-
-    await prisma.disconnect()
 
     return db_er_visit

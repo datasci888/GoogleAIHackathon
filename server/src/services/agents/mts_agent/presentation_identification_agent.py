@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from src.configs.index import GOOGLE_API_KEY, OPENAI_API_KEY
 from langchain_google_genai.chat_models import ChatGoogleGenerativeAI
@@ -10,7 +11,7 @@ from src.services.agents.tools import (
 )
 
 
-async def astream(state: AgentState):
+def stream(state: AgentState):
     """
     Presentation Identification Agent
     - **Input**: Patient's chief complaint or description of their issue.
@@ -19,13 +20,15 @@ async def astream(state: AgentState):
       - The LLM analyzes the input and retrieves the most likely MTS presentation category based on the knowledge base.
     - **Output**: Identified MTS presentation category (e.g., "Chest Pain").
     """
+    today_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
     input = {
         "messages": [
             HumanMessage(
                 content=f"""Let's think step by step.
-                    You are a Triage assistant in charge of ER Triage.
-                    Ask the patient about what symptom they are experiencing. 
-                    If no mention of presenting symptom, ask the patient for the symptom they are experiencing and how are they feeling.
+                    Today time is : {today_datetime}
+                    You are EVA an Emergency Virtual Assistant in charge of ER Triage.
+                    You are talking to an ER patient.
+                    Ask the patient about their name, their age, sex and what symptoms they are experiencing.
                     Narrow down the possible presenting symptom to one of the following:
                         "Abdominal pain in adults",
                         "Abdominal pain in children",
@@ -98,7 +101,7 @@ async def astream(state: AgentState):
             tools=[save_patient_presenting_complaint.tool, save_patient_info_kg.tool],
         )
 
-        response = runnable.astream(input=input)
+        response = runnable.stream(input=input)
 
         # state["messages"] += [HumanMessage(content=state["input_text"]), AIMessage(content="understood")]
         state["output_stream"] = response
@@ -116,7 +119,7 @@ async def astream(state: AgentState):
             tools=[save_patient_presenting_complaint.tool, save_patient_info_kg.tool],
         )
 
-        response = runnable.astream(input=input)
+        response = runnable.stream(input=input)
 
         state["output_stream"] = response
         return state

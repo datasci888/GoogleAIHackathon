@@ -6,7 +6,7 @@ from src.datasources.prisma import prisma
 import asyncio
 
 
-async def arun(
+def run(
     er_visit_id: Annotated[str, Field(description="erVisitId")],
     presenting_symptom: Annotated[
         Literal[
@@ -69,23 +69,26 @@ async def arun(
     try:
         kg = KnowledgeGraph(label=er_visit_id, verbose=True)
 
-        await asyncio.gather(
-            prisma.erpatientrecord.upsert(
-                where={"erVisitId": er_visit_id},
-                data={
-                    "create": {
-                        "chiefComplaint": presenting_symptom,
-                        "erVisitId": er_visit_id,
-                    },
-                    "update": {"chiefComplaint": presenting_symptom},
+        prisma.erpatientrecord.upsert(
+            where={"erVisitId": er_visit_id},
+            data={
+                "create": {
+                    "chiefComplaint": presenting_symptom,
+                    "erVisitId": er_visit_id,
                 },
-            ),
-            kg.astore_knowledge(
+                "update": {"chiefComplaint": presenting_symptom},
+            },
+        ),
+        kg.store_knowledge(
                 knowledge=f"patient presenting symptom is {presenting_symptom}"
-            ),
-        )
+            )
+        
 
-        return f"Patient presenting symptom is {presenting_symptom}"
+        return f"""
+```
+Patient presenting symptom is {presenting_symptom}
+```
+"""
     except Exception as e:
         raise ToolException(str(e))
 
@@ -93,6 +96,6 @@ async def arun(
 tool = StructuredTool.from_function(
     name="save_patient_presenting_symptom",
     description="use this to save patient presenting symptom",
-    coroutine=arun,
+    func=run,
     handle_tool_error=True,
 )

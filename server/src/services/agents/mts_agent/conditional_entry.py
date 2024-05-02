@@ -1,10 +1,10 @@
 from src.services.agents.mts_agent.state import AgentState
 
 
-async def conditional_entry(state: AgentState):
+def conditional_entry(state: AgentState):
     from src.datasources.prisma import prisma
 
-    db_ervisit = await prisma.ervisit.upsert(
+    db_ervisit = prisma.ervisit.upsert(
         where={"id": state["er_visit_id"]},
         data={"create": {"id": state["er_visit_id"]}, "update": {}},
         include={"ERPatientRecord": True},
