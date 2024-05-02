@@ -1,7 +1,7 @@
 from http.client import HTTPException, INTERNAL_SERVER_ERROR
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
-from src.configs.index import GOOGLE_API_KEY
+from src.configs.index import GOOGLE_API_KEY, OPENAI_API_KEY
 from src.services.agents.mts_agent.state import AgentState
 from src.datasources.prisma import prisma
 from src.utils import discriminators_knowledge_retrieval
@@ -10,6 +10,7 @@ from src.services.agents.tools import save_patient_info_kg, save_patient_triage_
 from langchain_core.messages import HumanMessage, AIMessage
 from src.utils.knowledge_graph import KnowledgeGraph
 import asyncio
+
 
 async def astream(state: AgentState):
     """
@@ -42,7 +43,7 @@ async def astream(state: AgentState):
         discriminators_knowledge_retrieval.aquery(
             query=db_erpatientrecord.chiefComplaint,
         ),
-        kg.aretrieve_knowledge(query="""patient"""),
+        kg.aquery_knowledge(query="""patient"""),
     )
 
     print("patient_info", patient_info)
@@ -89,9 +90,12 @@ async def astream(state: AgentState):
         state["output_stream"] = async_stream
         return state
     except Exception as e:
-        model = ChatGoogleGenerativeAI(
-            model="gemini-pro", google_api_key=GOOGLE_API_KEY
-        )
+        from langchain_community.llms.openai import OpenAI
+
+        # model = ChatGoogleGenerativeAI(
+        #     model="gemini-pro", google_api_key=GOOGLE_API_KEY
+        # )
+        model = OpenAI(api_key=OPENAI_API_KEY, model="gpt-4-turbo")
 
         runnable = create_function_calling_executor(
             model=model,

@@ -85,7 +85,7 @@ async def arun(
             ),
         )
 
-        return f"{presenting_symptom} has been recorded"
+        return f"Patient presenting symptom is {presenting_symptom}"
     except Exception as e:
         raise ToolException(str(e))
 

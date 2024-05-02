@@ -29,6 +29,7 @@ unsync = "^1.4.0"
 llama-index-graph-stores-neo4j = "^0.1.4"
 llama-index-llms-openai = "^0.1.16"
 audio-recorder-streamlit = "^0.0.8"
+segno = "^1.6.1"
 
 
 [build-system]

@@ -1,7 +1,8 @@
 from datetime import datetime
 import json
 from langchain_google_genai import ChatGoogleGenerativeAI
-from src.configs.index import GOOGLE_API_KEY
+from langchain_community.llms.openai import OpenAI
+from src.configs.index import GOOGLE_API_KEY, OPENAI_API_KEY
 from src.services.agents.mts_agent.state import AgentState
 from langgraph.prebuilt.chat_agent_executor import create_function_calling_executor
 from src.services.agents.tools import save_patient_triage_colour, save_patient_info_kg
@@ -17,7 +18,7 @@ async def astream(state: AgentState):
 
     # TODO cache and asyncio gather
     patient_info, patient_symptoms_and_classification = asyncio.gather(
-        kg.aretrieve_knowledge(query="""find all information about the patient"""),
+        kg.aquery_knowledge(query="""find all information about the patient"""),
         prisma.erpatientrecord.find_first(where={"erVisitId": state["er_visit_id"]}),
     )
 
@@ -51,7 +52,7 @@ async def astream(state: AgentState):
             HumanMessage(content=state["input_text"]),
         ]
     }
-
+    print("input", input)
     try:
         model = ChatGoogleGenerativeAI(
             model="gemini-1.5-pro-latest", google_api_key=GOOGLE_API_KEY
@@ -66,10 +67,10 @@ async def astream(state: AgentState):
         state["output_stream"] = async_stream
         return state
     except Exception as e:
-        model = ChatGoogleGenerativeAI(
-            model="gemini-pro", google_api_key=GOOGLE_API_KEY
-        )
-
+        # model = ChatGoogleGenerativeAI(
+        #     model="gemini-pro", google_api_key=GOOGLE_API_KEY
+        # )
+        model = OpenAI(api_key=OPENAI_API_KEY, model="gpt-4-turbo")
         runnable = create_function_calling_executor(
             model=model,
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],

@@ -105,11 +105,11 @@ async def astream(state: AgentState):
         return state
     except Exception as e:
         from langchain_community.llms.openai import OpenAI
-        model = ChatGoogleGenerativeAI(
-            model="gemini-pro", google_api_key=GOOGLE_API_KEY
-        )
-
-        # model = OpenAI(api_key=OPENAI_API_KEY, model="gpt-4-turbo")
+        # model = ChatGoogleGenerativeAI(
+        #     model="gemini-pro", google_api_key=GOOGLE_API_KEY
+        # )
+        # fallback
+        model = OpenAI(api_key=OPENAI_API_KEY, model="gpt-4-turbo")
         
         runnable = create_function_calling_executor(
             model=model,

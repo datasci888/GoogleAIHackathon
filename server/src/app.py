@@ -45,7 +45,7 @@ if "messages" not in st.session_state:
         )
     st.session_state.messages = parsed_er_messages
 
-st.title("AI Triage Care")
+st.title("EVA - Emergency Medical Assistant")
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -86,11 +86,11 @@ if prompt:
         from src.services.agents.mts_agent.index import astream
 
         async def run_astream():
-            final_response = ""
-            async for chunk in astream(er_visit_id, prompt):
-                final_response += chunk
-                st.write(chunk + "  ")
-            return final_response
+            async for message in astream(er_visit_id, prompt):
+                st.markdown(
+                    body=message
+                )
+            return message
 
         final_response = asyncio.run(run_astream())
 

@@ -69,18 +69,37 @@ async def astream(er_visit_id: str, input_text: str) -> AsyncIterable[str]:
         if state.get("output_stream", []):
             # print("output_stream", state["output_stream"])
             async for schunk in state["output_stream"]:
-                text_chunk = ""
+                message = {"agent": "", "action": ""}
                 if "agent" in schunk:
                     text_chunk = schunk["agent"]["messages"][0].content
+                    message["agent"] += text_chunk
                 elif "action" in schunk:
-                    action = schunk["action"]["messages"][0].content
-                    if action:
+                    action_chunk = schunk["action"]["messages"][0].content
+                    if action_chunk:
                         # function call
-                        text_chunk = f""""```{action}```"""
-                print("text_chunk", text_chunk)
-                yield text_chunk
-                final_text += text_chunk
+                        message["action"] += action_chunk
+                
+                # cleanup
+                if len(message["action"]) > 0 and len(message["agent"]) > 0:
+                    final_text = f"""
+                    ```
+                    {message["action"]}
+                    ````
+                    {message["agent"]}
+                    """ 
+                elif len(message["action"]) > 0:
+                    final_text =  f"""
+                    ```
+                    {message["action"]}
+                    ````
+                    """
+                elif len(message["agent"]) > 0:
+                    final_text =  f"""
+                    {message["agent"]}
+                    """
 
+                yield final_text
+                
     # store in db
     db_user_chatmessage = await prisma.chatmessage.create(
         data={
