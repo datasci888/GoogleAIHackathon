@@ -12,7 +12,7 @@ from llama_index.llms.litellm import LiteLLM
 from llama_index.llms.openai import OpenAI
 
 
-async def aquery(query: str):
+def query(query: str):
     pc = Pinecone(api_key=PINECONE_API_KEY)
 
     pinecone_index = pc.Index(host=PINECONE_URL)
@@ -31,7 +31,7 @@ async def aquery(query: str):
         verbose=True,
     )
 
-    response = await recursive_query_engine.aquery(
+    response = recursive_query_engine.query(
         str_or_query_bundle=f"""Let's think step by step.
         Present a detailed discriminators complete with colour codes given a presenting complaint or symptom.
         {query}

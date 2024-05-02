@@ -1,4 +1,4 @@
-from typing import AsyncIterable
+from typing import AsyncIterable, Iterable
 from langgraph.graph import StateGraph, END
 from src.services.agents.mts_agent.conditional_entry import conditional_entry
 from src.services.agents.mts_agent.state import AgentState
@@ -14,10 +14,10 @@ from src.datasources.prisma import prisma
 graph = StateGraph(AgentState)
 
 graph.add_node(
-    "presentation_identification_agent", presentation_identification_agent.astream
+    "presentation_identification_agent", presentation_identification_agent.stream
 )
-graph.add_node("discriminators_agent", discriminators_agent.astream)
-graph.add_node("queue_agent", queue_agent.astream)
+graph.add_node("discriminators_agent", discriminators_agent.stream)
+graph.add_node("queue_agent", queue_agent.stream)
 
 
 graph.set_conditional_entry_point(
@@ -36,14 +36,12 @@ graph.add_edge("queue_agent", END)
 runnable = graph.compile()
 
 
-async def astream(
+def stream(
     er_visit_id: str, input_text: str | None, input_image: bytes | None = None
-) -> AsyncIterable[str]:
-    if prisma.is_connected() is False:
-        await prisma.connect()
+) -> Iterable[str]:
 
     # retrieve previous messages
-    db_chat_messages = await prisma.chatmessage.find_many(
+    db_chat_messages = prisma.chatmessage.find_many(
         where={"erVisitId": er_visit_id},
         order={"createdAt": "desc"},
         take=4,
@@ -56,7 +54,7 @@ async def astream(
         messages.append(jsonpickle.decode(db_chat_messages[index].raw))
         index -= 1
 
-    astream = runnable.astream(
+    stream = runnable.stream(
         input=AgentState(
             {"er_visit_id": er_visit_id, "input_text": input_text, "messages": messages}
         ),
@@ -64,56 +62,34 @@ async def astream(
     )
 
     final_text = ""
-    async for chunk in astream:
+    for chunk in stream:
         for key in chunk:
             state: AgentState = chunk[key]
         # print("state", state)
         if state.get("output_stream", []):
             # print("output_stream", state["output_stream"])
-            async for schunk in state["output_stream"]:
-                message = {"agent": "", "action": ""}
+            for schunk in state["output_stream"]:
                 if "agent" in schunk:
                     text_chunk = schunk["agent"]["messages"][0].content
-                    message["agent"] += text_chunk
+                    if text_chunk:
+                        final_text += text_chunk
                 elif "action" in schunk:
                     action_chunk = schunk["action"]["messages"][0].content
                     if action_chunk:
                         # function call
-                        message["action"] += action_chunk
-
-                # cleanup
-                if len(message["action"]) > 0 and len(message["agent"]) > 0:
-                    final_text = f"""
-                    ```
-                    {message["action"]}
-                    ````
-                    {message["agent"]}
-                    """
-                elif len(message["action"]) > 0:
-                    final_text = f"""
-                    ```
-                    {message["action"]}
-                    ````
-                    """
-                elif len(message["agent"]) > 0:
-                    final_text = f"""
-                    {message["agent"]}
-                    """
-
-                yield final_text
+                        final_text += action_chunk
+            yield final_text
 
     # store in db
-    db_user_chatmessage = await prisma.chatmessage.create(
+    db_user_chatmessage = prisma.chatmessage.create(
         data={
             "erVisitId": er_visit_id,
             "raw": jsonpickle.encode(HumanMessage(content=input_text)),
         }
     )
-    db_ai_chatmessage = await prisma.chatmessage.create(
+    db_ai_chatmessage = prisma.chatmessage.create(
         data={
             "erVisitId": er_visit_id,
             "raw": jsonpickle.encode(AIMessage(content=final_text)),
         }
     )
-
-    await prisma.disconnect()

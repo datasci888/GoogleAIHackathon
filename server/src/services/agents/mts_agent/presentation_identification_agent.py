@@ -11,7 +11,7 @@ from src.services.agents.tools import (
 )
 
 
-async def astream(state: AgentState):
+def stream(state: AgentState):
     """
     Presentation Identification Agent
     - **Input**: Patient's chief complaint or description of their issue.
@@ -101,7 +101,7 @@ async def astream(state: AgentState):
             tools=[save_patient_presenting_complaint.tool, save_patient_info_kg.tool],
         )
 
-        response = runnable.astream(input=input)
+        response = runnable.stream(input=input)
 
         # state["messages"] += [HumanMessage(content=state["input_text"]), AIMessage(content="understood")]
         state["output_stream"] = response
@@ -119,7 +119,7 @@ async def astream(state: AgentState):
             tools=[save_patient_presenting_complaint.tool, save_patient_info_kg.tool],
         )
 
-        response = runnable.astream(input=input)
+        response = runnable.stream(input=input)
 
         state["output_stream"] = response
         return state

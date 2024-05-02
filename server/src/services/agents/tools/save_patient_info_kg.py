@@ -1,3 +1,4 @@
+import asyncio
 from langchain_community.docstore.document import Document
 from typing import Annotated
 from langchain_core.tools import ToolException, StructuredTool
@@ -5,7 +6,7 @@ from pydantic import Field
 from src.utils.knowledge_graph import KnowledgeGraph
 
 
-async def arun(
+def run(
     er_visit_id: Annotated[str, Field(description="erVisitId")],
     triplets: Annotated[
         list[str],
@@ -27,8 +28,12 @@ async def arun(
 
         kg = KnowledgeGraph(label=er_visit_id, verbose=True)
         knowledge = "\n".join(triplets)
-        res = await kg.astore_knowledge(knowledge=knowledge)
-        return f"{knowledge} has been recorded"
+        res = kg.store_knowledge(knowledge=knowledge)
+        return f"""
+```
+{knowledge}
+```
+"""
     except Exception as e:
         raise ToolException(str(e))
 
@@ -36,6 +41,6 @@ async def arun(
 tool = StructuredTool.from_function(
     name="save_patient_info",
     description="use this to save patient information",
-    coroutine=arun,
+    func=run,
     handle_tool_error=True,
 )

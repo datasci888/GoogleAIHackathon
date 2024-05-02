@@ -3,12 +3,12 @@ from src.services.er_visit import read_er_visit
 import streamlit as st
 from audio_recorder_streamlit import audio_recorder
 import jsonpickle
-import asyncio
 import os
 from nest_asyncio import apply
 from PIL import Image
 from openai import OpenAI
 import uuid
+from src.services.agents.mts_agent.index import stream
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 apply()
@@ -26,13 +26,23 @@ def text_to_speech(text):
     return response.content
 
 
+def run_stream(
+    er_visit_id: str,
+    prompt: str | None = None,
+    image: bytes | None = None,
+):
+    for message in stream(er_visit_id, prompt):
+        st.markdown(body=message)
+    return message
+
+
 if not "er_visit_id" in st.session_state:
     st.session_state.er_visit_id = f"triage{uuid.uuid4().hex}"
 
 er_visit_id = st.session_state["er_visit_id"]
 if "messages" not in st.session_state:
     # change the id later depending on session
-    er_visit = asyncio.run(read_er_visit(id=er_visit_id))
+    er_visit = read_er_visit(id=er_visit_id)
     er_messages = er_visit.ChatMessages or []
 
     parsed_er_messages = []
@@ -91,34 +101,28 @@ if prompt:
     with query_holder.chat_message("user"):
         st.write(prompt)
 
+    final_response = ""
     with response_holder.chat_message("assistant"):
-        from src.services.agents.mts_agent.index import astream
+        try:
+            if uploaded_image:
+                with st.spinner("Analyzing image"):
+                    img_file = uploaded_image.read()
+                    final_response = run_stream(er_visit_id, prompt, img_file)
+                    # process image here!
 
-        async def run_astream(
-            er_visit_id: str, prompt: str | None = None, image: bytes | None = None
-        ):
-            async for message in astream(er_visit_id, prompt):
-                st.markdown(body=message)
-            return message
 
-        final_response = ""
-        if uploaded_image:
-            with st.spinner("Analyzing image"):
-                img_file = uploaded_image.read()
-                final_response = asyncio.run(run_astream(er_visit_id, prompt, img_file))
-                # process image here!
-
-        with st.spinner("Thinking..."):
-            try:
-                final_response = asyncio.run(run_astream(er_visit_id, prompt))
-            except:
-                st.error(
-                    body="We are experiencing some issues. Please try again later.",
-                    icon="🚨",
-                )
-        if tts:
-            with st.spinner("Generating audio response"):
-                audio = text_to_speech(final_response)
-                st.audio(audio)
+            with st.spinner("Thinking..."):
+                final_response = run_stream(er_visit_id, prompt)
+                pass
+            
+            if tts:
+                with st.spinner("Generating audio response"):
+                    audio = text_to_speech(final_response)
+                    st.audio(audio)
+        except:
+            st.error(
+                body="We are experiencing some issues. Please try again later.",
+                icon="🚨",
+            )
 
     st.session_state.messages.append({"role": "assistant", "content": final_response})

@@ -12,13 +12,13 @@ from src.utils.knowledge_graph import KnowledgeGraph
 import asyncio
 
 
-async def astream(state: AgentState):
+def stream(state: AgentState):
     today_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
     kg = KnowledgeGraph(label=state["er_visit_id"], verbose=True)
 
-    # TODO cache and asyncio gather
-    patient_info, patient_symptoms_and_classification = asyncio.gather(
-        kg.aquery_knowledge(query="""find all information about the patient"""),
+    patient_info = kg.query_knowledge(query="""find all information about the patient""")
+
+    patient_symptoms_and_classification = (
         prisma.erpatientrecord.find_first(where={"erVisitId": state["er_visit_id"]}),
     )
 
@@ -64,9 +64,9 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state
     except Exception as e:
         # model = ChatGoogleGenerativeAI(
@@ -78,7 +78,7 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state

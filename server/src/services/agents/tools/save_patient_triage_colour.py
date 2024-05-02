@@ -3,7 +3,7 @@ from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
 
 
-async def arun(
+def run(
     er_visit_id: Annotated[str, Field(description="erVisitId")],
     triage_classification_colour: Annotated[
         Literal["RED", "ORANGE", "YELLOW", "GREEN", "BLUE"],
@@ -13,7 +13,7 @@ async def arun(
     from src.datasources.prisma import prisma
 
     try:
-        db_patientrecord = await prisma.erpatientrecord.update(
+        db_patientrecord = prisma.erpatientrecord.update(
             where={"erVisitId": er_visit_id},
             data={"triageColour": triage_classification_colour},
         )
@@ -25,9 +25,12 @@ async def arun(
             "BLUE": "within 240 minutes.",
         }
 
-        return f"""Successfully queued at {db_patientrecord.updatedAt}
+        return f"""
+```
+Successfully queued at {db_patientrecord.updatedAt}
 Expect a response {colour_hash[triage_classification_colour]}
 Your queue code is {db_patientrecord.erVisitId}
+```
 """
     except Exception as e:
         raise ToolException(str(e))
@@ -36,6 +39,6 @@ Your queue code is {db_patientrecord.erVisitId}
 tool = StructuredTool.from_function(
     name="save_patient_triage_classification_colour",
     description="use this to save patient colour classification",
-    coroutine=arun,
+    func=run,
     handle_tool_error=True,
 )

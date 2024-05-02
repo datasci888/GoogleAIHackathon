@@ -13,7 +13,7 @@ from src.utils.knowledge_graph import KnowledgeGraph
 import asyncio
 
 
-async def astream(state: AgentState):
+def stream(state: AgentState):
     """
     ### Discriminator Seeking Agent
     - **Input**: Identified MTS presentation category and potentially additional patient information.
@@ -25,7 +25,7 @@ async def astream(state: AgentState):
     """
     # retrieve patient record
     today_datetime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
-    db_erpatientrecord = await prisma.erpatientrecord.find_first(
+    db_erpatientrecord = prisma.erpatientrecord.find_first(
         where={"erVisitId": state["er_visit_id"]}
     )
 
@@ -37,13 +37,11 @@ async def astream(state: AgentState):
 
     kg = KnowledgeGraph(label=state["er_visit_id"], verbose=True)
 
-    discriminators_context, patient_info = await asyncio.gather(
-        discriminators_knowledge_retrieval.aquery(
-            query=db_erpatientrecord.chiefComplaint,
-        ),
-        kg.aquery_knowledge(query="""patient"""),
+    discriminators_context = discriminators_knowledge_retrieval.query(
+        query=db_erpatientrecord.chiefComplaint,
     )
 
+    patient_info = kg.aquery_knowledge(query="""patient""")
 
     input = {
         "messages": (
@@ -84,9 +82,9 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state
     except Exception as e:
         from langchain_community.llms.openai import OpenAI
@@ -101,7 +99,7 @@ async def astream(state: AgentState):
             tools=[save_patient_info_kg.tool, save_patient_triage_colour.tool],
         )
 
-        async_stream = runnable.astream(input=input)
+        stream = runnable.stream(input=input)
 
-        state["output_stream"] = async_stream
+        state["output_stream"] = stream
         return state
