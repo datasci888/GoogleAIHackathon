@@ -4,8 +4,6 @@
 from typing import List
 from llama_index.core import Settings
 from src.configs.index import (
-    ENV,
-    GOOGLE_API_KEY,
     NEO4J_PASSWORD,
     NEO4J_URL,
     NEO4J_USERNAME,
@@ -20,7 +18,6 @@ from llama_index.core.readers import StringIterableReader
 from llama_index.core.base.response.schema import RESPONSE_TYPE
 from llama_index.core.graph_stores.types import GraphStore
 from llama_index.core.storage import StorageContext
-from llama_index.llms.litellm import LiteLLM
 from llama_index.llms.openai import OpenAI
 
 
@@ -72,7 +69,7 @@ class KnowledgeGraph:
             include_embeddings=True,
             show_progress=self.verbose,
         )
-        self._close()
+        # self._close()
 
     # async def get_network_graph(self):
     #     network_graph = self.index.index_struct.table
@@ -87,7 +84,7 @@ class KnowledgeGraph:
             storage_context=self.storage_context, nodes=[], show_progress=self.verbose
         )
         response = index.as_retriever().retrieve(query)
-        self._close()
+        # self._close()
         return response
 
     def query_knowledge(self, query: str) -> RESPONSE_TYPE:
@@ -100,7 +97,7 @@ class KnowledgeGraph:
         )
         response = query_engine.query(query)
 
-        self._close()
+        # self._close()
         return response
 
     def _close(self) -> None:
@@ -112,4 +109,4 @@ class KnowledgeGraph:
         MATCH (n:{self.label}) DETACH DELETE n
         """
         )
-        self._close()
+        # self._close()

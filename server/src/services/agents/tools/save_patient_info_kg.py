@@ -4,7 +4,7 @@ from typing import Annotated
 from langchain_core.tools import ToolException, StructuredTool
 from pydantic import Field
 from src.utils.knowledge_graph import KnowledgeGraph
-
+from llama_index.core.node_parser.text import SentenceSplitter
 
 def run(
     er_visit_id: Annotated[str, Field(description="erVisitId")],
@@ -28,10 +28,16 @@ def run(
 
         kg = KnowledgeGraph(label=er_visit_id, verbose=True)
         knowledge = "\n".join(triplets)
-        res = kg.store_knowledge(knowledge=knowledge)
+        kg.store_knowledge(knowledge=knowledge)
+        knowledge = kg.query_knowledge(query="""patient""")
+        splited_knowledge = knowledge.response.split(". ")
+        print("splited_knowledge", splited_knowledge)
+        parsed_knowledge = ""
+        for sentence in splited_knowledge:
+            parsed_knowledge += f"{sentence}.\n"
         return f"""
 ```
-{knowledge}
+{parsed_knowledge}
 ```
 """
     except Exception as e:

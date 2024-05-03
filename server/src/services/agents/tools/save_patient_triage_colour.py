@@ -19,16 +19,17 @@ def run(
         )
         colour_hash = {
             "RED": "now.",
-            "ORANGE": "within 10 minutes.",
-            "YELLOW": "within 60 minutes.",
-            "GREEN": "within 120 minutes.",
-            "BLUE": "within 240 minutes.",
+            "ORANGE": "within 10 minutes",
+            "YELLOW": "within 60 minutes",
+            "GREEN": "within 120 minutes",
+            "BLUE": "within 240 minutes",
         }
 
         return f"""
 ```
-Successfully queued at {db_patientrecord.updatedAt}
-Expect a response {colour_hash[triage_classification_colour]}
+Successfully queued at {db_patientrecord.updatedAt}.
+Your Triage colour is {triage_classification_colour}.
+Expect a response {colour_hash[triage_classification_colour]}.
 Your queue code is {db_patientrecord.erVisitId}
 ```
 """

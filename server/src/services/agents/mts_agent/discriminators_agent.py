@@ -41,7 +41,7 @@ def stream(state: AgentState):
         query=db_erpatientrecord.chiefComplaint,
     )
 
-    patient_info = kg.aquery_knowledge(query="""patient""")
+    patient_info = kg.query_knowledge(query="""patient""")
 
     input = {
         "messages": (
@@ -52,7 +52,7 @@ def stream(state: AgentState):
                                 You are EVA an Emergency Virtual Assistant in charge of ER Triage.
                                 You are talking to an ER patient.
                                 Classify the patient's triage Colour based on MTS and record it using tool.
-                                If more information is needed, ask the patient's for additional symptoms or description of their issue.
+                                If more information is needed, ask the patient's for additional symptoms or description of their issue and record it using tool.
                                 
                                 Here's what we know about the patient:
                                 {patient_info}
